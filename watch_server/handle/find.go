@@ -8,8 +8,6 @@ import (
 	"net/http"
 )
 
-// TODO response encode to JSON
-
 func FindSingle(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		responseText(w, "Method is not GET.", http.StatusMethodNotAllowed)
