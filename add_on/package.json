@@ -1,0 +1,17 @@
+{
+  "name": "local_file_check",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "node node_modules/webpack/bin/webpack.js --display-error-details",
+    "watch": "node node_modules/webpack/bin/webpack.js --watch --progress"
+  },
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.3.2",
+    "babel-preset-latest": "^6.22.0",
+    "webpack": "^2.2.1"
+  }
+}
