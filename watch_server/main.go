@@ -28,9 +28,9 @@ func main() {
 	// set routing
 	r.HandleFunc("/health", handle.Health) // health check
 	r.HandleFunc("/regist", handle.Regist)
-	r.HandleFunc("/unregist/{category}", handle.Unregist)
-	r.HandleFunc("/{category}/{key}", handle.FindSingle) // get single
-	r.HandleFunc("/{category}", handle.FindMulti)        // get multi on JSON parameter.
+	r.HandleFunc("/unregist/{name}", handle.Unregist)
+	r.HandleFunc("/{name}/{key}", handle.FindSingle) // get single
+	r.HandleFunc("/{name}", handle.FindMulti)        // get multi on JSON parameter.
 
 	err := http.ListenAndServe(":"+strconv.Itoa(*port), r)
 

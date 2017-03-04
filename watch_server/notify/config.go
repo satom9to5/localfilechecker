@@ -6,7 +6,7 @@ import (
 )
 
 type Config struct {
-	Category  string `json:"category"`
+	Name      string `json:"name"`
 	Directory string `json:"directory"`
 	Pattern   string `json:"pattern"`
 	MatchNum  int    `json:"matchnum"`

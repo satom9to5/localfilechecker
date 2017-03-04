@@ -15,10 +15,10 @@ func FindSingle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	category := vars["category"]
+	name := vars["name"]
 	key := vars["key"]
 
-	js, err := json.MarshalString(notify.Get(category, key))
+	js, err := json.MarshalString(notify.Get(name, key))
 	if err != nil {
 		responseText(w, "JSON Marshal error.", http.StatusInternalServerError)
 		return
@@ -53,17 +53,17 @@ func FindMulti(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	category := vars["category"]
+	name := vars["name"]
 
 	js := ""
 	var err error
 
 	if len(keys) == 0 {
 		// GET
-		js, err = json.MarshalString(notify.GetAll(category))
+		js, err = json.MarshalString(notify.GetAll(name))
 	} else {
 		// POST
-		js, err = json.MarshalString(notify.GetMulti(category, keys))
+		js, err = json.MarshalString(notify.GetMulti(name, keys))
 	}
 
 	if err != nil {

@@ -46,9 +46,9 @@ func Unregist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	category := vars["category"]
+	name := vars["name"]
 
-	err := notify.RemoveDirectoryInfo(category)
+	err := notify.RemoveDirectoryInfo(name)
 	if err != nil {
 		log.Println("Cannot remove conifg.", err)
 		responseText(w, "Cannot remove config.", http.StatusInternalServerError)
