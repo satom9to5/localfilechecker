@@ -2,7 +2,8 @@ import path from 'path'
 
 module.exports = {
   entry: {
-    index: './src/index.js'
+    content: './src/content/main.js',
+    background: './src/background/main.js',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -13,6 +14,9 @@ module.exports = {
       path.resolve(__dirname, 'src'),
       'node_modules'
     ],
+    alias: {
+      config: path.resolve(__dirname, 'config'),
+    }
   },
   devtool: 'inline-source-map',
   module: {
@@ -33,7 +37,12 @@ module.exports = {
         test: /\.css$/,
         exclude: /node_modules/,
         use: ["style", "css?modules"],
-      }
+      },
+      {
+        test: /\.ya?ml$/,
+        exclude: /node_modules/,
+        use: "yml-loader"
+      },
     ]
   }
 }
