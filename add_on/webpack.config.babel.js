@@ -4,6 +4,7 @@ module.exports = {
   entry: {
     content: './src/content/main.js',
     background: './src/background/main.js',
+    preferences: './src/preferences/main.jsx',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -14,6 +15,7 @@ module.exports = {
       path.resolve(__dirname, 'src'),
       'node_modules'
     ],
+    extensions: [".js", ".jsx", ".css", ".yml", ".yaml"], 
     alias: {
       config: path.resolve(__dirname, 'config'),
     }
@@ -21,6 +23,20 @@ module.exports = {
   devtool: 'inline-source-map',
   module: {
     rules: [
+      {
+        test: /\.jsx$/,
+        include: path.resolve(__dirname, 'src'),
+        use: {
+          loader: "babel-loader",
+          query: {
+            presets: [
+              ["es2015", { modules: false }],
+              "stage-0",
+              "react"
+            ],
+          }
+        }
+      },
       {
         test: /\.js$/,
         include: path.resolve(__dirname, 'src'),
