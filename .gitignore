@@ -6,4 +6,6 @@ add_on/dist/
 
 # node
 node_modules/
-npm-debug.log
+
+# log file
+*.log
