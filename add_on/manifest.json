@@ -1,0 +1,29 @@
+{
+  "name": "local file check",
+  "version": "1.0",
+  "manifest_version": 2,
+  "description": "find local files from inner page links.",
+  "icons": {
+    "128": "icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["dist/content.js"]
+    }
+  ],
+  "background": {
+    "scripts": [
+      "dist/background.js"
+    ]
+  },
+  "options_page": "options.html", // Chrome
+  "options_ui": { // Firefox
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "storage",
+    "nativeMessaging"
+  ]
+}
