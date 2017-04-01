@@ -1,6 +1,7 @@
 package notify
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 )
@@ -10,6 +11,10 @@ type Config struct {
 	Directory string `json:"directory"`
 	Pattern   string `json:"pattern"`
 	MatchNum  int    `json:"matchnum"`
+}
+
+func (c Config) String() string {
+	return fmt.Sprintf("Name:%s, Directory:%s, Pattern:%s, MatchNum:%d", c.Name, c.Directory, c.Pattern, c.MatchNum)
 }
 
 func (c Config) compilePattern() *regexp.Regexp {
