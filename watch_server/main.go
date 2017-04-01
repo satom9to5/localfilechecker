@@ -1,6 +1,7 @@
 package main
 
 import (
+	"../pidfile"
 	"./handle"
 	"./libs/json"
 	"./notify"
@@ -9,17 +10,19 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 )
 
 func main() {
 	// command line option
 	port := flag.Int("p", 4000, "port number. default: 4000")
-	config := flag.String("c", "", "watch folder config")
-	logPath := flag.String("l", "", "output log path")
+	logPath := flag.String("log", "", "output log path")
+	config := flag.String("conf", "", "watch folder config")
 
 	flag.Parse()
 
+	pidfileCheck()
 	setLog(logPath)
 	setConfig(config)
 
@@ -32,10 +35,35 @@ func main() {
 	r.HandleFunc("/{name}/{key}", handle.FindSingle) // get single
 	r.HandleFunc("/{name}", handle.FindMulti)        // get multi on JSON parameter.
 
-	err := http.ListenAndServe(":"+strconv.Itoa(*port), r)
+	log.Println("Starting Server...")
 
-	if err != nil {
-		log.Fatal("Start Server Failed.", err)
+	go func() {
+		err := http.ListenAndServe(":"+strconv.Itoa(*port), r)
+
+		if err != nil {
+			log.Fatal("Start Server Failed.", err)
+		}
+	}()
+
+	// Wait Signal
+	ch := make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, os.Kill)
+
+	// Server shutdown
+	<-ch
+	pidfile.Remove()
+	os.Exit(1)
+}
+
+func pidfileCheck() {
+	pid, _ := pidfile.Read()
+	if pid > 0 {
+		log.Fatal("Server is already Running.")
+		return
+	}
+
+	if err := pidfile.Write(); err != nil {
+		log.Fatal(err)
 	}
 }
 

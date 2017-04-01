@@ -9,3 +9,7 @@ node_modules/
 
 # log file
 *.log
+log/
+
+# pidfile
+pid/
