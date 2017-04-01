@@ -1,18 +1,11 @@
 package main
 
 import (
+	"./logs"
 	"./message"
 	nm "./native_message"
 	"flag"
-	"log"
 	"os"
-	"path/filepath"
-)
-
-var (
-	// for debug
-	logpath = "../log/debug.log"
-	logger  = &log.Logger{}
 )
 
 func main() {
@@ -25,7 +18,8 @@ func main() {
 	var err error
 
 	flag.Parse()
-	setLog()
+	logs.SetLog()
+	logger := logs.GetLogger()
 
 	for {
 		if err = nm.Receive(req, os.Stdin); err != nil {
@@ -50,10 +44,4 @@ func main() {
 	if err = nm.Send(res, os.Stdout); err != nil {
 		logger.Println(err)
 	}
-}
-
-func setLog() {
-	os.MkdirAll(filepath.Dir(logpath), os.FileMode(0755))
-	logfile, _ := os.OpenFile(logpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	logger = log.New(logfile, "", log.LstdFlags|log.Llongfile)
 }

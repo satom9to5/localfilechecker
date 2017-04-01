@@ -2,6 +2,9 @@ package message
 
 import (
 	pf "../../pidfile"
+	"../../watch_server/notify"
+	"../log"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -20,12 +23,14 @@ var (
 )
 
 type RequestMessage struct {
-	Type string `json:"type"`
-	Port int    `json:"port"`
+	Type   string         `json:"type"`
+	Port   int            `json:"port"`
+	Log    string         `json:"log"`
+	Config *notify.Config `json:"config"`
 }
 
 func (rm RequestMessage) String() string {
-	return fmt.Sprintf("Type:%s, Port:%d", rm.Type, rm.Port)
+	return fmt.Sprintf("Type:%s, Port:%d, Config:%s", rm.Type, rm.Port, rm.Config)
 }
 
 func (rm *RequestMessage) Run() error {
@@ -66,8 +71,27 @@ func (rm *RequestMessage) serverStart() error {
 		return fmt.Errorf("Server is Running. pid:%d", proc.Pid)
 	}
 
-	params = append(params, "-p", strconv.Itoa(rm.Port))
+	params = append(params, "-port", strconv.Itoa(rm.Port))
 	params = append(params, "-pidfile", pidfile)
+
+	if rm.Log != "" {
+		logpath, err := filepath.Abs(rm.Log)
+		if err != nil {
+			return err
+		}
+
+		params = append(params, "-log", logpath)
+	}
+
+	if rm.Config != nil {
+		configJson, err := json.Marshal(rm.Config)
+		if err != nil {
+			return err
+		}
+
+		log.GetLogger().Println(configJson)
+		params = append(params, "-conf", string(configJson))
+	}
 
 	// Server Start
 	cmd := exec.Command(command, params...)
