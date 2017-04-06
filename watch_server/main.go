@@ -24,8 +24,8 @@ func main() {
 	flag.Parse()
 
 	pidfileCheck()
-	setLog(logPath)
-	setConfig(config)
+	setLog()
+	setConfig()
 
 	r := mux.NewRouter()
 
@@ -67,7 +67,7 @@ func pidfileCheck() {
 }
 
 // log setting
-func setLog(logPath *string) {
+func setLog() {
 	log.SetFlags(log.Ldate | log.Ltime)
 
 	if logPath == nil || *logPath == "" {
@@ -82,21 +82,23 @@ func setLog(logPath *string) {
 	log.SetOutput(logFile)
 }
 
-func setConfig(config *string) {
+func setConfig() {
 	if config == nil || *config == "" {
 		return
 	}
 
-	c := notify.Config{}
+	confs := []notify.Config{}
 
-	err := json.UnmarshalString(*config, &c)
+	err := json.UnmarshalString(*config, &confs)
 	if err != nil {
-		shutdown("cannot Unmarshal config.", *config)
+		shutdown("cannot Unmarshal config.", *config, err)
 	}
 
-	err = notify.AddDirectoryInfo(c)
-	if err != nil {
-		shutdown("cannot load config.", *config)
+	for _, c := range confs {
+		err = notify.AddDirectoryInfo(c)
+		if err != nil {
+			shutdown("cannot load config.", c, err)
+		}
 	}
 }
 
