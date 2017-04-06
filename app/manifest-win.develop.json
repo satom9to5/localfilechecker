@@ -1,0 +1,14 @@
+{
+  "name": "local_file_check",
+  "description": "Local file check API",
+  "path": "develop.gorun.bat",
+  "type": "stdio",
+  // For Firefox
+  "allowed_extensions": [
+    "localfilecheck@example.org"
+  ],
+  // For Chrome
+  "allowed_origins": [
+    "chrome-extension://ndkeiioggibdofbgcigiglknbbeicbmm/"
+  ]
+}
