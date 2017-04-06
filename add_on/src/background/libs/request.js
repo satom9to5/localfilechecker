@@ -18,6 +18,10 @@ const findMulti = (params) => {
   return fetchServer("POST", `http://localhost:4000/${name}`, keys) 
 }
 
+export const health = () => {
+  return fetchServer("GET", "http://localhost:4000/health")
+}
+
 const fetchServer = (method, url, values = null) => {
   const headers = new Headers({
     "Content-Type": "application/json"

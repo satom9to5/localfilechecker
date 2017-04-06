@@ -1,10 +1,16 @@
 {
-  "name": "local file check",
+  "name": "Local File Check",
   "version": "1.0",
   "manifest_version": 2,
   "description": "find local files from inner page links.",
   "icons": {
     "128": "icon-128.png"
+  },
+  "applications": {
+    "gecko": {
+      "id": "localfilecheck@example.org",
+      "strict_min_version": "50.0"
+    }
   },
   "content_scripts": [
     {
@@ -17,12 +23,16 @@
       "dist/background.js"
     ]
   },
+  "browser_action": {
+    "default_title": "Local File Check"
+  },
   "options_page": "options.html", // Chrome
   "options_ui": { // Firefox
     "page": "options.html",
     "open_in_tab": true
   },
   "permissions": [
+    "contextMenus",
     "storage",
     "nativeMessaging"
   ]
