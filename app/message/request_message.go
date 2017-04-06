@@ -3,19 +3,23 @@ package message
 import (
 	pf "../../pidfile"
 	"../../watch_server/notify"
-	"../log"
+	"../logs"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 )
 
 const (
 	ServerStart = "start"
 	ServerStop  = "stop"
+	Running     = "running"
+
+	defaultPort = 4000
 )
 
 var (
@@ -23,14 +27,21 @@ var (
 )
 
 type RequestMessage struct {
-	Type   string         `json:"type"`
-	Port   int            `json:"port"`
-	Log    string         `json:"log"`
-	Config *notify.Config `json:"config"`
+	Type    string          `json:"type"`
+	Port    int             `json:"port"`
+	Log     string          `json:"log"`
+	Configs []notify.Config `json:"configs"`
+}
+
+func NewRequestMessage() *RequestMessage {
+	return &RequestMessage{
+		Port: defaultPort,
+		Log:  "../log/watch_server.log",
+	}
 }
 
 func (rm RequestMessage) String() string {
-	return fmt.Sprintf("Type:%s, Port:%d, Config:%s", rm.Type, rm.Port, rm.Config)
+	return fmt.Sprintf("Type:%s, Port:%d, Configs:%s", rm.Type, rm.Port, rm.Configs)
 }
 
 func (rm *RequestMessage) Run() error {
@@ -41,6 +52,8 @@ func (rm *RequestMessage) Run() error {
 		return rm.serverStart()
 	case ServerStop:
 		return rm.serverStop()
+	case Running:
+		return rm.running()
 	}
 
 	return nil
@@ -83,14 +96,14 @@ func (rm *RequestMessage) serverStart() error {
 		params = append(params, "-log", logpath)
 	}
 
-	if rm.Config != nil {
-		configJson, err := json.Marshal(rm.Config)
+	if len(rm.Configs) > 0 {
+		configsJson, err := json.Marshal(rm.Configs)
 		if err != nil {
 			return err
 		}
 
-		log.GetLogger().Println(configJson)
-		params = append(params, "-conf", string(configJson))
+		logs.GetLogger().Println(string(configsJson))
+		params = append(params, "-conf", string(configsJson))
 	}
 
 	// Server Start
@@ -109,7 +122,19 @@ func (rm *RequestMessage) serverStop() error {
 		return err
 	}
 
-	return proc.Signal(os.Interrupt)
+	switch runtime.GOOS {
+	case "windows":
+		return proc.Kill()
+	default:
+		return proc.Signal(os.Interrupt)
+	}
+}
+
+func (rm *RequestMessage) running() error {
+	// server runnning check
+	_, err := GetProcess()
+
+	return err
 }
 
 func GetProcess() (*os.Process, error) {

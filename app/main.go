@@ -9,11 +9,8 @@ import (
 )
 
 func main() {
-	req := &message.RequestMessage{}
-	res := &message.ResponseMessage{
-		Type:    "none",
-		Success: false,
-	}
+	req := message.NewRequestMessage()
+	res := message.NewResponseMessage()
 
 	var err error
 
