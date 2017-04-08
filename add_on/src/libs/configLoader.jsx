@@ -1,6 +1,6 @@
 import sitesYml from 'config/sites.yml'
 
-class SiteConfig {
+class ConfigLoader {
   loadYml(name) {
     if (!name || name == "") {
       return null
@@ -54,7 +54,7 @@ class SiteConfig {
   }
 }
 
-const siteConfig = new SiteConfig()
-Object.freeze(siteConfig)
+const configLoader = new ConfigLoader()
+Object.freeze(configLoader)
 
-export default siteConfig
+export default configLoader
