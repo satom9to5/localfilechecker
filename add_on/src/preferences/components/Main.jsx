@@ -4,6 +4,8 @@ import ServerConfig from 'preferences/components/ServerConfig'
 import Sites from 'preferences/components/Sites'
 import SiteConfig from 'preferences/components/SiteConfig'
 
+import storage from 'libs/storage'
+
 export default class Main extends Component {
   newSiteConfig() {
     this.setState({
@@ -25,11 +27,26 @@ export default class Main extends Component {
       return
     }
 
-    chrome.storage.local.remove(site.name, () => {
-      chrome.storage.local.get(null, sites => {
-        this.setState({
-          sites
-        })
+    storage.get('sites').then(sites => {
+      const newSites = sites
+      delete newSites[site.name]
+
+      return storage.set('sites', newSites)
+    }).then(() => {
+      this.setSites()
+    })
+  }
+
+  clearConfig(e) {
+    e.stopPropagation()
+
+    if (!confirm("clear OK?")) {
+      return
+    }
+
+    storage.clear().then(() => {
+      this.setState({
+        sites: {}  
       })
     })
   }
@@ -40,9 +57,13 @@ export default class Main extends Component {
       editSite: null,
     })
 
-    chrome.storage.local.get(null, sites => {
+    this.setSites()
+  }
+
+  setSites() {
+    storage.get('sites').then(sites => {
       this.setState({
-        sites
+        sites: sites ? sites : {}
       })
     })
   }
@@ -54,11 +75,7 @@ export default class Main extends Component {
       editSite: null,
     })
 
-    chrome.storage.local.get(null, sites => {
-      this.setState({
-        sites
-      })
-    })
+    this.setSites()
   }
 
   render() {
@@ -79,6 +96,12 @@ export default class Main extends Component {
     default:
       component = (
         <div>
+          <h2>
+            <div style={{ float: "right" }}>
+              <button type="button" onClick={::this.clearConfig}>Clear</button>
+            </div>
+          </h2>
+
           <ServerConfig /> 
           <Sites
             sites={sites}

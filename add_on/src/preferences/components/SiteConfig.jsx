@@ -5,6 +5,7 @@ import ManipulateConfig from 'preferences/components/ManipulateConfig'
 
 import configLoader from 'libs/configLoader'
 import getPlaceholder from 'libs/getPlaceholder'
+import storage from 'libs/storage'
 
 import sitesYml from 'config/sites.yml'
 
@@ -94,13 +95,15 @@ export default class SiteConfig extends Component {
 
     const { name } = this.state 
 
-    if (name) {
-      chrome.storage.local.set({
-        [name]: this.state      
-      })
+    if (!name) {
+      backHome()
     }
 
-    backHome()
+    storage.get('sites').then(sites => {
+      return storage.set('sites', Object.assign({}, sites, {[name]: this.state}))
+    }).then(sites => {
+      backHome()
+    })
   }
 
   componentWillMount() {
