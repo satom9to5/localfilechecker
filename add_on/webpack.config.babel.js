@@ -30,7 +30,7 @@ module.exports = {
           loader: "babel-loader",
           query: {
             presets: [
-              ["es2015", { modules: false }],
+              "es2017",
               "stage-0",
               "react"
             ],
