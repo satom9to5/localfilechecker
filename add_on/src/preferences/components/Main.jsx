@@ -7,6 +7,12 @@ import SiteConfig from 'preferences/components/SiteConfig'
 import storage from 'libs/storage'
 
 export default class Main extends Component {
+  editServerConfig() {
+    this.setState({
+      view: "editServerConfig"
+    })
+  }
+
   newSiteConfig() {
     this.setState({
       view: "newSiteConfig"
@@ -31,9 +37,11 @@ export default class Main extends Component {
       const newSites = sites
       delete newSites[site.name]
 
-      return storage.set('sites', newSites)
+      return storage.set({
+        sites: newSites
+      })
     }).then(() => {
-      this.setSites()
+      this.setConfig()
     })
   }
 
@@ -45,9 +53,7 @@ export default class Main extends Component {
     }
 
     storage.clear().then(() => {
-      this.setState({
-        sites: {}  
-      })
+      this.setConfig()
     })
   }
 
@@ -57,44 +63,42 @@ export default class Main extends Component {
       editSite: null,
     })
 
-    this.setSites()
+    this.setConfig()
   }
 
-  setSites() {
-    storage.get('sites').then(sites => {
+  setConfig() {
+    storage.get(['port', 'logpath', 'pidfile', 'sites']).then(conf => {
+      const { port, logpath, pidfile, sites } = conf
+
       this.setState({
-        sites: sites ? sites : {}
+        port: port || "4000",
+        logpath,
+        pidfile,
+        sites: sites || {}
       })
     })
   }
 
-  componentWillMount() {
-    this.setState({
-      view: null,
-      sites: {},
-      editSite: null,
-    })
+  renderByView() {
+    const { view, port, logpath, pidfile, sites, editSite } = this.state
 
-    this.setSites()
-  }
-
-  render() {
-    const { view, sites, editSite } = this.state
-
-    let component = null
     switch (view) {
+    case "editServerConfig":
+      return <ServerConfig
+        port={port}
+        logpath={logpath}
+        pidfile={pidfile}
+        backHome={::this.backHome}
+      /> 
+      break
     case "newSiteConfig":
-      component = (
-        <SiteConfig backHome={::this.backHome} />
-      )
+      return <SiteConfig backHome={::this.backHome} />
       break
     case "editSiteConfig":
-      component = (
-        <SiteConfig site={editSite} backHome={::this.backHome} />
-      )
+      return <SiteConfig site={editSite} backHome={::this.backHome} />
       break
     default:
-      component = (
+      return (
         <div>
           <h2>
             <div style={{ float: "right" }}>
@@ -102,7 +106,27 @@ export default class Main extends Component {
             </div>
           </h2>
 
-          <ServerConfig /> 
+          <section>
+            <h2>
+              Server
+            </h2>
+
+            <div>
+              <span>listen port: </span>
+              <span>{port}</span>
+            </div>
+            <div>
+              <span>log file path: </span>
+              <span>{logpath}</span>
+            </div>
+            <div>
+              <span>pid file path: </span>
+              <span>{pidfile}</span>
+            </div>
+
+              <button type="button" onClick={::this.editServerConfig}>Edit</button>
+          </section>
+
           <Sites
             sites={sites}
             newSiteConfig={::this.newSiteConfig}
@@ -113,10 +137,25 @@ export default class Main extends Component {
       )
       break
     }
+  }
 
+  componentWillMount() {
+    this.setState({
+      view: null,
+      port: "4000",
+      logpath: "",
+      pidfile: "",
+      sites: {},
+      editSite: null,
+    })
+
+    this.setConfig()
+  }
+
+  render() {
     return (
       <article>
-        {component}
+        {this.renderByView()}
       </article>
     )
   }

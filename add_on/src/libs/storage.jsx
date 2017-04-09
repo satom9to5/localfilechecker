@@ -11,12 +11,10 @@ class Storage {
     })
   }
 
-  set(key, value) {
-    const setValue = {[key]: value}
-
+  set(value) {
     return new Promise(resolve => {
-      chrome.storage.local.set(setValue, () => {
-        resolve(setValue) 
+      chrome.storage.local.set(value, () => {
+        resolve(value) 
       })
     })
   }

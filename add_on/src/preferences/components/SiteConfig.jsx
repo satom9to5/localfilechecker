@@ -100,7 +100,9 @@ export default class SiteConfig extends Component {
     }
 
     storage.get('sites').then(sites => {
-      return storage.set('sites', Object.assign({}, sites, {[name]: this.state}))
+      return storage.set({
+        sites: Object.assign({}, sites, {[name]: this.state})
+      })
     }).then(sites => {
       backHome()
     })

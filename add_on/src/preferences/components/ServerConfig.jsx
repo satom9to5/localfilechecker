@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 
 import getPlaceholder from 'libs/getPlaceholder'
+import storage from 'libs/storage'
 
 export default class ServerConfig extends Component {
   onChangeField(e) {
@@ -9,15 +10,34 @@ export default class ServerConfig extends Component {
     })
   }
 
+  save() {
+    const { port, logpath, pidfile } = this.state
+
+
+    storage.set({
+      port,
+      logpath,
+      pidfile
+    }).then(() => {
+      const { backHome } = this.props
+
+      backHome()
+    })
+  }
+
   componentWillMount() {
+    const { port, logpath, pidfile } = this.props
+
     this.setState({
-       port: "4000",
-       logPath: "",
+      port,
+      logpath,
+      pidfile
     })
   }
 
   render() {
-    const { port, logPath } = this.state
+    const { port, logpath, pidfile } = this.state // values
+    const { backHome } = this.props // functions
 
     return (
       <section>
@@ -36,14 +56,26 @@ export default class ServerConfig extends Component {
       
             <tr>
               <td>
-                <label htmlFor="logPath">log file path</label>
+                <label htmlFor="logpath">log file path</label>
               </td>
               <td>
-                <input type="text" name="log_path" placeholder={getPlaceholder("log_path")} value={logPath} onChange={::this.onChangeField} />
+                <input type="text" name="logpath" placeholder={getPlaceholder("log_path")} value={logpath} onChange={::this.onChangeField} />
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <label htmlFor="pidfile">pid file path</label>
+              </td>
+              <td>
+                <input type="text" name="pidfile" placeholder={getPlaceholder("pidfile")} value={pidfile} onChange={::this.onChangeField} />
               </td>
             </tr>
           </tbody>
         </table>
+
+        <button type="submit" onClick={::this.save}>Submit</button>
+        <button type="button" onClick={backHome}>Cancel</button>
       </section>
     )
   }
