@@ -56,13 +56,13 @@ serverRunningCheck(() => {
           }
         })
       } else {
-        browser.storage.local.get(null, sites => {
-          if (!sites) {
+        browser.storage.local.get('sites', storage => {
+          if (!storage || !storage.sites) {
             return
           }
-  
-          const configs = Object.getOwnPropertyNames(sites).map(name => {
-            const site = sites[name]
+
+          const configs = Object.getOwnPropertyNames(storage.sites).map(name => {
+            const site = storage.sites[name]
   
             return {
               name: site.name,
