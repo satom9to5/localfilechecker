@@ -30,6 +30,7 @@ type RequestMessage struct {
 	Type    string          `json:"type"`
 	Port    int             `json:"port"`
 	Log     string          `json:"log"`
+	Pidfile string          `json:"pidfile"`
 	Configs []notify.Config `json:"configs"`
 }
 
@@ -45,7 +46,11 @@ func (rm RequestMessage) String() string {
 }
 
 func (rm *RequestMessage) Run() error {
-	pf.SetPath(pidfile)
+	if rm.Pidfile != "" {
+		pf.SetPath(rm.Pidfile)
+	} else {
+		pf.SetPath(pidfile)
+	}
 
 	switch rm.Type {
 	case ServerStart:
@@ -85,7 +90,12 @@ func (rm *RequestMessage) serverStart() error {
 	}
 
 	params = append(params, "-port", strconv.Itoa(rm.Port))
-	params = append(params, "-pidfile", pidfile)
+
+	if rm.Pidfile != "" {
+		params = append(params, "-pidfile", rm.Pidfile)
+	} else {
+		params = append(params, "-pidfile", pidfile)
+	}
 
 	if rm.Log != "" {
 		logpath, err := filepath.Abs(rm.Log)
@@ -124,6 +134,8 @@ func (rm *RequestMessage) serverStop() error {
 
 	switch runtime.GOOS {
 	case "windows":
+		// because cannot use Signal, remove pidfile here.
+		pf.Remove()
 		return proc.Kill()
 	default:
 		return proc.Signal(os.Interrupt)
