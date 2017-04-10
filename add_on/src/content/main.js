@@ -14,6 +14,8 @@ const convertArgs = (args) => {
     return args
   }
 
+  args = args.trim()
+
   switch (args.substr(0, 1)) {
     case '{':
       if (args.substr(-1) != '}') {
