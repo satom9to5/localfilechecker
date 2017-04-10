@@ -1,7 +1,9 @@
+const browser = window.chrome || window.browser
+
 class Storage {
   get(key) {
     return new Promise(resolve => {
-      chrome.storage.local.get(key, data => {
+      browser.storage.local.get(key, data => {
         if (typeof key == "string") {
           resolve(data[key]) 
         } else {
@@ -13,7 +15,7 @@ class Storage {
 
   set(value) {
     return new Promise(resolve => {
-      chrome.storage.local.set(value, () => {
+      browser.storage.local.set(value, () => {
         resolve(value) 
       })
     })
@@ -21,7 +23,7 @@ class Storage {
 
   clear() {
     return new Promise(resolve => {
-      chrome.storage.local.clear(() => {
+      browser.storage.local.clear(() => {
         resolve(null)
       })
     })
