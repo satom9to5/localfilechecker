@@ -26,6 +26,49 @@ export default class Main extends Component {
     })
   }
 
+  importConfig(e) {
+    e.stopPropagation()
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result != "string") {
+        return
+      } 
+
+      const conf = JSON.parse(reader.result)
+      if (conf instanceof Object) {
+        storage.set(conf).then(() => {
+          this.setConfig()
+        })
+      }
+    }
+
+    reader.readAsText(e.target.files[0])
+  }
+
+  exportConfig() {
+    storage.get(null).then(conf => {
+      const blob = new Blob([ JSON.stringify(conf) ], { type: 'text/plain' })
+      const a = document.createElement('a')
+        
+      a.href = window.URL.createObjectURL(blob)
+      a.download = 'localfilecheck.json'
+      a.click()
+    })    
+  }
+
+  clearConfig(e) {
+    e.stopPropagation()
+
+    if (!confirm("clear OK?")) {
+      return
+    }
+
+    storage.clear().then(() => {
+      this.setConfig()
+    })
+  }
+
   removeSiteConfig(e, site) {
     e.stopPropagation()
 
@@ -41,18 +84,6 @@ export default class Main extends Component {
         sites: newSites
       })
     }).then(() => {
-      this.setConfig()
-    })
-  }
-
-  clearConfig(e) {
-    e.stopPropagation()
-
-    if (!confirm("clear OK?")) {
-      return
-    }
-
-    storage.clear().then(() => {
       this.setConfig()
     })
   }
@@ -100,11 +131,13 @@ export default class Main extends Component {
     default:
       return (
         <div>
-          <h2>
-            <div style={{ float: "right" }}>
-              <button type="button" onClick={::this.clearConfig}>Clear</button>
+          <section>
+            <div>
+              Import: <input type="file" onChange={::this.importConfig} /><br />
+              Export: <button type="button" onClick={::this.exportConfig}>Export</button><br />
+              Clear: <button type="button" onClick={::this.clearConfig}>Clear</button>
             </div>
-          </h2>
+          </section>
 
           <section>
             <h2>
