@@ -1,5 +1,7 @@
 # output directory
 add_on/dist/
+app/bin/
+watch_server/bin/
 
 # vim
 *.swp
