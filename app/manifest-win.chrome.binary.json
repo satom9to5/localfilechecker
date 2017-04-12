@@ -1,0 +1,9 @@
+{
+  "name": "local_file_check",
+  "description": "Local file check API",
+  "path": "bin/win64.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://ndkeiioggibdofbgcigiglknbbeicbmm/"
+  ]
+}
