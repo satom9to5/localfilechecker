@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -23,7 +24,10 @@ const (
 )
 
 var (
-	pidfile, _ = filepath.Abs("../pid/watch_server.pid")
+	logdir      = "../log"
+	logfilename = "watch_server.log"
+	pidfile, _  = filepath.Abs("../pid/watch_server.pid")
+	isBinary    = false
 )
 
 type RequestMessage struct {
@@ -37,7 +41,6 @@ type RequestMessage struct {
 func NewRequestMessage() *RequestMessage {
 	return &RequestMessage{
 		Port: defaultPort,
-		Log:  "../log/watch_server.log",
 	}
 }
 
@@ -74,19 +77,20 @@ func (rm *RequestMessage) serverStart() error {
 		return errors.New("cannot use well-known port.")
 	}
 
+	// server runnning check
+	if proc, err := GetProcess(); err == nil {
+		return fmt.Errorf("Server is Running. pid:%d", proc.Pid)
+	}
+
 	// Command Line Parameter
 	command := ""
 	params := []string{}
 
-	switch os.Getenv("ENVIRONMENT") {
-	default:
+	if isBinary {
+		command = fmt.Sprintf("../../watch_server/bin/%s", path.Base(os.Args[0]))
+	} else {
 		command = "go"
 		params = []string{"run", "../watch_server/main.go"}
-	}
-
-	// server runnning check
-	if proc, err := GetProcess(); err == nil {
-		return fmt.Errorf("Server is Running. pid:%d", proc.Pid)
 	}
 
 	params = append(params, "-port", strconv.Itoa(rm.Port))
@@ -97,14 +101,18 @@ func (rm *RequestMessage) serverStart() error {
 		params = append(params, "-pidfile", pidfile)
 	}
 
+	var logpath string
 	if rm.Log != "" {
-		logpath, err := filepath.Abs(rm.Log)
-		if err != nil {
-			return err
-		}
-
-		params = append(params, "-log", logpath)
+		logpath, err = filepath.Abs(rm.Log)
+	} else {
+		logpath, err = filepath.Abs(logpath + "/" + logfilename)
 	}
+
+	if err != nil {
+		return err
+	}
+
+	params = append(params, "-log", logpath)
 
 	if len(rm.Configs) > 0 {
 		configsJson, err := json.Marshal(rm.Configs)
@@ -156,4 +164,12 @@ func GetProcess() (*os.Process, error) {
 	}
 
 	return os.FindProcess(pid)
+}
+
+func SetLogdir(dir string) {
+	logdir = dir
+}
+
+func SetIsBinary(flag bool) {
+	isBinary = flag
 }
