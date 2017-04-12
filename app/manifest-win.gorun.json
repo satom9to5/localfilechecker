@@ -1,7 +1,7 @@
 {
   "name": "local_file_check",
   "description": "Local file check API",
-  "path": "develop.gorun.bat",
+  "path": "gorun.bat",
   "type": "stdio",
   // For Firefox
   "allowed_extensions": [
