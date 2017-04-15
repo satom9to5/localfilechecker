@@ -1,9 +1,7 @@
-const browser = window.chrome || window.browser
-
 class NativeMessage {
   send(name, value) {
     return new Promise(resolve => {
-      browser.runtime.sendNativeMessage(name, value, response => {
+      chrome.runtime.sendNativeMessage(name, value, response => {
         resolve(response) 
       })
     })

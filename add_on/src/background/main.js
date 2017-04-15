@@ -3,8 +3,6 @@ import { find } from 'background/libs/request'
 import storage from 'libs/storage'
 import nativeMessage from 'libs/nativeMessage'
 
-const browser = window.chrome || window.browser
-
 const watchServerConf = {
   id: 'watchServerStatus',
   running: false,
@@ -93,10 +91,10 @@ const watchServerMenuClickListener = info => {
   }
 }
 
-browser.browserAction.setBadgeText({ text: "Stop" })
-browser.browserAction.setBadgeBackgroundColor({ color: "#EE0000" })
+chrome.browserAction.setBadgeText({ text: "Stop" })
+chrome.browserAction.setBadgeBackgroundColor({ color: "#EE0000" })
 
-browser.contextMenus.create({
+chrome.contextMenus.create({
   id: watchServerConf.id,
   type: 'normal',
   title: watchServerConf.title.stop,
@@ -108,7 +106,7 @@ browser.contextMenus.create({
 serverRunningCheck()
 
 // Request to Server.
-browser.runtime.onMessage.addListener((req, sender, callback) => {
+chrome.runtime.onMessage.addListener((req, sender, callback) => {
   find(req)
   .then(res => {
     if (res.ok) {
@@ -131,9 +129,9 @@ const updateMenu = (running) => {
 
   const stat = running ? 'start' : 'stop'
 
-  browser.contextMenus.update(watchServerConf.id, {
+  chrome.contextMenus.update(watchServerConf.id, {
     title: watchServerConf.title[stat]
   })
 
-  browser.browserAction.setBadgeText({ text: watchServerConf.text[stat] })
+  chrome.browserAction.setBadgeText({ text: watchServerConf.text[stat] })
 }

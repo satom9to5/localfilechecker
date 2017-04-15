@@ -1,5 +1,3 @@
-const browser = window.chrome || window.browser
-
 export const find = (name, keys, callback) => {
   if (!keys) {
     callback(null)
@@ -16,7 +14,7 @@ export const find = (name, keys, callback) => {
     keys,
   }
 
-  browser.runtime.sendMessage(values, (res) => {
+  chrome.runtime.sendMessage(values, (res) => {
     callback(res)
   })
 }
