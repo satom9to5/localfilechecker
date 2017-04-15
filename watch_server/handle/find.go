@@ -9,9 +9,14 @@ import (
 )
 
 func FindSingle(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		responseText(w, "Method is not GET.", http.StatusMethodNotAllowed)
+	switch r.Method {
+	case "GET":
+		break
+	case "OPTIONS":
+		responseText(w, "preflight request ok.", http.StatusOK)
 		return
+	default:
+		responseText(w, "Method is not GET/OPTIONS.", http.StatusMethodNotAllowed)
 	}
 
 	vars := mux.Vars(r)
@@ -47,6 +52,8 @@ func FindMulti(w http.ResponseWriter, r *http.Request) {
 			responseText(w, "Cannot unmarshale json.", http.StatusBadRequest)
 			return
 		}
+	case "OPTIONS":
+		responseText(w, "preflight request ok.", http.StatusOK)
 	default:
 		responseText(w, "Method is not GET/POST.", http.StatusMethodNotAllowed)
 		return
