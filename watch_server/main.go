@@ -16,7 +16,7 @@ import (
 
 var (
 	port    = flag.Int("port", 4000, "port number. default: 4000")
-	logPath = flag.String("log", "", "output log path")
+	logpath = flag.String("log", "", "output log path")
 	config  = flag.String("conf", "", "watch folder config")
 )
 
@@ -62,7 +62,7 @@ func pidfileCheck() {
 	}
 
 	if err := pidfile.Write(); err != nil {
-		log.Fatal(err)
+		shutdown(err)
 	}
 }
 
@@ -70,13 +70,13 @@ func pidfileCheck() {
 func setLog() {
 	log.SetFlags(log.Ldate | log.Ltime)
 
-	if logPath == nil || *logPath == "" {
+	if logpath == nil || *logpath == "" {
 		return
 	}
 
-	logFile, err := os.OpenFile(*logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	logFile, err := os.OpenFile(*logpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		shutdown("cannot open log file.", *logPath)
+		shutdown("cannot open log file.", *logpath)
 	}
 
 	log.SetOutput(logFile)
@@ -109,6 +109,8 @@ func shutdown(v ...interface{}) {
 		exitStatus = 1
 		log.Println(v...)
 	}
+
+	log.Println("Shutdown server...")
 
 	pidfile.Remove()
 	os.Exit(exitStatus)
