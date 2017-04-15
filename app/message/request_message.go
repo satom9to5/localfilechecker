@@ -3,12 +3,12 @@ package message
 import (
 	pf "../../pidfile"
 	"../../watch_server/notify"
+	"../exec"
 	"../logs"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -105,7 +105,7 @@ func (rm *RequestMessage) serverStart() error {
 	if rm.Log != "" {
 		logpath, err = filepath.Abs(rm.Log)
 	} else {
-		logpath, err = filepath.Abs(logpath + "/" + logfilename)
+		logpath, err = filepath.Abs(logdir + "/" + logfilename)
 	}
 
 	if err != nil {
@@ -124,9 +124,10 @@ func (rm *RequestMessage) serverStart() error {
 		params = append(params, "-conf", string(configsJson))
 	}
 
+	logs.GetLogger().Println(command, params)
+
 	// Server Start
 	cmd := exec.Command(command, params...)
-
 	if err = cmd.Start(); err != nil {
 		return err
 	}
