@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -87,7 +86,8 @@ func (rm *RequestMessage) serverStart() error {
 	params := []string{}
 
 	if isBinary {
-		command = fmt.Sprintf("../../watch_server/bin/%s", path.Base(os.Args[0]))
+		argsDir := filepath.Dir(os.Args[0])
+		command = fmt.Sprintf(argsDir+"/../../watch_server/bin/%s", filepath.Base(os.Args[0]))
 	} else {
 		command = "go"
 		params = []string{"run", "../watch_server/main.go"}

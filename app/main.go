@@ -6,8 +6,8 @@ import (
 	nm "./native_message"
 	"flag"
 	"os"
-	"path"
 	"path/filepath"
+	"regexp"
 )
 
 func main() {
@@ -19,13 +19,15 @@ func main() {
 	flag.Parse()
 
 	// check go run command or compiled binary
-	curDir, _ := filepath.Abs(".")
-	isBinary := curDir == path.Dir(os.Args[0])
+	argsPath, _ := filepath.Abs(os.Args[0])
+	re := regexp.MustCompile("go-build")
+	isBinary := argsPath != "" && argsPath != "." && !re.MatchString(argsPath)
 
 	// update setting for binary.
 	if isBinary {
-		logs.SetLogdir("../../log")
-		message.SetLogdir("../../log")
+		argsDir := filepath.Dir(os.Args[0])
+		logs.SetLogdir(argsDir + "/../../log")
+		message.SetLogdir(argsDir + "/../../log")
 		message.SetIsBinary(isBinary)
 	}
 
