@@ -25,6 +25,11 @@ func NewDirectoryInfo(c Config) directoryInfo {
 	di.Regexp = di.Config.compilePattern()
 	di.walk() // regist fileInfo on directory
 
+	// start watching
+	go func() {
+		di.watch()
+	}()
+
 	return di
 }
 
@@ -76,7 +81,7 @@ func (di directoryInfo) watch() {
 	ch := make(chan notify.EventInfo, 1)
 	done := make(chan bool)
 
-	// 末尾に「...」付けると再帰的チェックになる
+	// suffix[...] is resursive check
 	if err := notify.Watch(di.Config.Directory+"/...", ch, notify.All); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -84,7 +89,7 @@ func (di directoryInfo) watch() {
 
 	defer notify.Stop(ch)
 
-	// 発生したイベントを補足
+	// event listener
 	for {
 		select {
 		case ei := <-ch:
