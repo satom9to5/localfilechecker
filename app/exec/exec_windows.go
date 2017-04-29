@@ -9,8 +9,10 @@ const (
 )
 
 func (c Cmd) Start() error {
-	c.command.SysProcAttr = &syscall.SysProcAttr{
-		CreationFlags: CREATE_BREAKAWAY_FROM_JOB,
+	if platform == "Firefox" {
+		c.command.SysProcAttr = &syscall.SysProcAttr{
+			CreationFlags: CREATE_BREAKAWAY_FROM_JOB,
+		}
 	}
 
 	return c.command.Start()

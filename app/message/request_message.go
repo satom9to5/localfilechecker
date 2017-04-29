@@ -30,11 +30,12 @@ var (
 )
 
 type RequestMessage struct {
-	Type    string          `json:"type"`
-	Port    int             `json:"port"`
-	Log     string          `json:"log"`
-	Pidfile string          `json:"pidfile"`
-	Configs []notify.Config `json:"configs"`
+	Type     string          `json:"type"`
+	Port     int             `json:"port"`
+	Log      string          `json:"log"`
+	Pidfile  string          `json:"pidfile"`
+	Platform string          `json:"platform"`
+	Configs  []notify.Config `json:"configs"`
 }
 
 func NewRequestMessage() *RequestMessage {
@@ -127,6 +128,7 @@ func (rm *RequestMessage) serverStart() error {
 	logs.GetLogger().Println(command, params)
 
 	// Server Start
+	exec.SetPlatform(rm.Platform)
 	cmd := exec.Command(command, params...)
 	if err = cmd.Start(); err != nil {
 		return err
