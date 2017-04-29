@@ -2,6 +2,7 @@ import { find } from 'background/libs/request'
 
 import storage from 'libs/storage'
 import nativeMessage from 'libs/nativeMessage'
+import platform from 'libs/platform'
 
 const watchServerConf = {
   id: 'watchServerStatus',
@@ -80,6 +81,7 @@ const watchServerMenuClickListener = info => {
         port: parseInt(port, 10),
         log: logpath,
         pidfile,
+        platform: platform(),
         configs
       })
     })
