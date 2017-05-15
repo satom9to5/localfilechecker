@@ -1,6 +1,7 @@
 package handle
 
 import (
+	"../config"
 	"../libs/json"
 	"../notify"
 	"github.com/gorilla/mux"
@@ -20,7 +21,7 @@ func Regist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	config := notify.Config{}
+	config := config.Config{}
 
 	err := json.Unmarshal(bodyBytes, &config)
 	if err != nil {

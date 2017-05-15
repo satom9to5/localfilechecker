@@ -1,4 +1,4 @@
-package notify
+package config
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ func (c Config) String() string {
 	return fmt.Sprintf("Name:%s, Directory:%s, Pattern:%s, MatchNum:%d", c.Name, c.Directory, c.Pattern, c.MatchNum)
 }
 
-func (c Config) compilePattern() *regexp.Regexp {
+func (c Config) CompilePattern() *regexp.Regexp {
 	return regexp.MustCompile(c.Pattern)
 }
 

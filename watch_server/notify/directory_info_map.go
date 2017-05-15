@@ -1,17 +1,18 @@
 package notify
 
 import (
+	"../config"
 	"errors"
 	"fmt"
 )
 
-type directoryInfoMap map[string]directoryInfo
+type directoryInfoMap map[string]*directoryInfo
 
 var (
 	registedDirectoryInfo = directoryInfoMap{}
 )
 
-func AddDirectoryInfo(config Config) error {
+func AddDirectoryInfo(config config.Config) error {
 	if config.Name == "" || config.Directory == "" || config.Pattern == "" {
 		return errors.New("config is incorrect.")
 	}
@@ -38,7 +39,7 @@ func RemoveDirectoryInfo(name string) error {
 	}
 }
 
-func Get(name, key string) *fileInfo {
+func Get(name, key string) *filesInfo {
 	fdi := registedDirectoryInfo.get(name)
 	if fdi == nil {
 		return nil
@@ -47,7 +48,7 @@ func Get(name, key string) *fileInfo {
 	return fdi.get(key)
 }
 
-func GetMulti(name string, keys []string) fileInfoMap {
+func GetMulti(name string, keys []string) filesInfoMap {
 	fdi := registedDirectoryInfo.get(name)
 	if fdi == nil {
 		return nil
@@ -56,7 +57,7 @@ func GetMulti(name string, keys []string) fileInfoMap {
 	return fdi.getMulti(keys)
 }
 
-func GetAll(name string) fileInfoMap {
+func GetAll(name string) filesInfoMap {
 	fdi := registedDirectoryInfo.get(name)
 	if fdi == nil {
 		return nil
@@ -67,7 +68,7 @@ func GetAll(name string) fileInfoMap {
 
 func (dim directoryInfoMap) get(name string) *directoryInfo {
 	if fdi, ok := dim[name]; ok {
-		return &fdi
+		return fdi
 	} else {
 		return nil
 	}

@@ -2,22 +2,17 @@ package main
 
 import (
 	"../pidfile"
+	"./config"
+	"./flag"
 	"./handle"
 	"./libs/json"
 	"./notify"
-	"flag"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
-)
-
-var (
-	port    = flag.Int("port", 4000, "port number. default: 4000")
-	logpath = flag.String("log", "", "output log path")
-	config  = flag.String("conf", "", "watch folder config")
 )
 
 func main() {
@@ -33,13 +28,14 @@ func main() {
 	r.HandleFunc("/health", handle.Health) // health check
 	r.HandleFunc("/regist", handle.Regist)
 	r.HandleFunc("/unregist/{name}", handle.Unregist)
+	r.HandleFunc("/notify", handle.Notify)
 	r.HandleFunc("/{name}/{key}", handle.FindSingle) // get single
 	r.HandleFunc("/{name}", handle.FindMulti)        // get multi on JSON parameter.
 
 	log.Println("Starting Server...")
 
 	go func() {
-		err := http.ListenAndServe(":"+strconv.Itoa(*port), r)
+		err := http.ListenAndServe(":"+strconv.Itoa(flag.Port()), r)
 
 		if err != nil {
 			shutdown("Start Server Failed.", err)
@@ -70,28 +66,32 @@ func pidfileCheck() {
 func setLog() {
 	log.SetFlags(log.Ldate | log.Ltime)
 
-	if logpath == nil || *logpath == "" {
+	logpath := flag.Logpath()
+
+	if logpath == "" {
 		return
 	}
 
-	logFile, err := os.OpenFile(*logpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	logFile, err := os.OpenFile(logpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		shutdown("cannot open log file.", *logpath)
+		shutdown("cannot open log file.", logpath)
 	}
 
 	log.SetOutput(logFile)
 }
 
 func setConfig() {
-	if config == nil || *config == "" {
+	conf := flag.Conf()
+
+	if conf == "" {
 		return
 	}
 
-	confs := []notify.Config{}
+	confs := []config.Config{}
 
-	err := json.UnmarshalString(*config, &confs)
+	err := json.UnmarshalString(conf, &confs)
 	if err != nil {
-		shutdown("cannot Unmarshal config.", *config, err)
+		shutdown("cannot Unmarshal config.", conf, err)
 	}
 
 	for _, c := range confs {
