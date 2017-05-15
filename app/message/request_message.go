@@ -2,7 +2,7 @@ package message
 
 import (
 	pf "../../pidfile"
-	"../../watch_server/notify"
+	"../../watch_server/config"
 	"../exec"
 	"../logs"
 	"encoding/json"
@@ -35,7 +35,7 @@ type RequestMessage struct {
 	Log      string          `json:"log"`
 	Pidfile  string          `json:"pidfile"`
 	Platform string          `json:"platform"`
-	Configs  []notify.Config `json:"configs"`
+	Configs  []config.Config `json:"configs"`
 }
 
 func NewRequestMessage() *RequestMessage {
@@ -91,7 +91,7 @@ func (rm *RequestMessage) serverStart() error {
 		command = fmt.Sprintf(argsDir+"/../../watch_server/bin/%s", filepath.Base(os.Args[0]))
 	} else {
 		command = "go"
-		params = []string{"run", "../watch_server/main.go"}
+		params = []string{"run", "../watch_server/main.go", "-debug"}
 	}
 
 	params = append(params, "-port", strconv.Itoa(rm.Port))
