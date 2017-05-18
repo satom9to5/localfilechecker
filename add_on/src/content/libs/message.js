@@ -1,3 +1,5 @@
+import Message from 'libs/Message'
+
 export const find = (name, keys, callback) => {
   if (!keys) {
     callback(null)
@@ -9,12 +11,20 @@ export const find = (name, keys, callback) => {
     return
   }
 
-  const values = {
+  const message = new Message("find", {
     name,
     keys,
-  }
+  })
 
-  chrome.runtime.sendMessage(values, (res) => {
+  chrome.runtime.sendMessage(message, (res) => {
     callback(res)
+  })
+}
+
+export const addTab = (name) => {
+  const message = new Message("addTab", name)
+
+  chrome.runtime.sendMessage(message, (res) => {
+    console.log(res)
   })
 }

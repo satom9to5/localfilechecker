@@ -1,7 +1,7 @@
 import $ from 'jquery'
 
 import Targets from 'content/models/Targets'
-import { find } from 'content/libs/message'
+import { find, addTab } from 'content/libs/message'
 
 import storage from 'libs/storage'
 
@@ -93,7 +93,7 @@ const findNode = (node, setting) => {
   })
 }
 
-const targetsManipulate = (targetKeys, setting) => {
+const targetsManipulate = (targetKeys, setting, isDelete = false) => {
   Object.getOwnPropertyNames(targetKeys).forEach(key => {
     if (!targets.maps[key]) {
       return
@@ -101,44 +101,15 @@ const targetsManipulate = (targetKeys, setting) => {
 
     const target = targets.maps[key]
 
-    if (!target.files || !target.queried || target.elements.length == 0) {
+    //if (!isDelete && (!target.files || !target.queried || target.elements.length == 0)) {
+    if (!isDelete && (!target.files || target.elements.length == 0)) {
       return
     }
 
     // DOM manipulate
     target.elements.forEach(element => {
-      // current
-      setting.target.current.forEach(current => {
-        if (!current.action || !current.args) {
-          return
-        }
-
-        const $filterCurrent = $(element).filter(current.filter)
-        if (!$filterCurrent || $filterCurrent.length == 0) {
-          return
-        }
-
-        $filterCurrent[current.action](current.args)
-      })
-
-      // parent
-      
-      // children
-      setting.target.children.forEach(child => {
-        if (!child.action || !child.args) {
-          return
-        }
-
-        const $childElements = $(element).find(child.query)
-        if (!$childElements || $childElements.length == 0) {
-          return
-        }
-	      
-        $childElements[child.action](child.args)
-      })
+      element.manipulate(setting.target, isDelete)
     })
-
-    target.elements = []
   })
 }
 
@@ -149,6 +120,27 @@ const addNodeInsertedListener = (setting) => {
       findNode(e.target, setting)
       break
     }
+  })
+}
+
+const addMessageListener = (setting) => {
+  chrome.runtime.onMessage.addListener((req, sender, callback) => {
+    if (!req.type || !req.files) {
+      return
+    }
+  
+    //console.log(req)
+  
+    const files = req.files
+  
+    if (!targets.maps.hasOwnProperty(files.key)) {
+      return
+    }
+
+    targets.maps[files.key].files = files.paths
+
+    const targetKeys = {[files.key]: files.key}
+    targetsManipulate(targetKeys, setting, req.type == "Delete")
   })
 }
 
@@ -174,6 +166,9 @@ const addNodeInsertedListener = (setting) => {
   }
 
   init(setting)
+  addTab(setting.name)
   findNode(document, setting)
   addNodeInsertedListener(setting)
+  addMessageListener(setting)
 })
+

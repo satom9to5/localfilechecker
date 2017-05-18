@@ -1,4 +1,5 @@
-import { find } from 'background/libs/request'
+import { find, notify, health } from 'background/libs/request'
+import { registTab } from 'background/libs/tabs'
 
 import storage from 'libs/storage'
 import nativeMessage from 'libs/nativeMessage'
@@ -27,11 +28,19 @@ const serverRunningCheck = () => {
   })
   .then(response => {
     if (response && response.success) {
-      updateMenu(true)
-      return true
+      // health check
+      return health()
     } else {
+      return null
+    }
+  }).then(res => {
+    if (!res || !res.ok) {
       return false
     }
+
+    updateMenu(true)
+    notify() // connect websocket
+    return true
   })
 }
 
@@ -88,6 +97,19 @@ const watchServerMenuClickListener = info => {
     .then(response => {
       if (response && response.success) {
         updateMenu(true)
+
+        // connect websocket when health ok
+        const healthNotify = (wait = 1) => {
+          health()
+          .then(() => {
+            notify() 
+          }, () => {
+            if (wait <= 16) {
+              setTimeout(healthNotify, wait * 2)
+            }
+          })
+        }
+        healthNotify()
       }
     })
   }
@@ -108,19 +130,31 @@ chrome.contextMenus.create({
 serverRunningCheck()
 
 // Request to Server.
-chrome.runtime.onMessage.addListener((req, sender, callback) => {
-  find(req)
-  .then(res => {
-    if (res.ok) {
-      return res.json()
-    } else {
-      return null
+chrome.runtime.onMessage.addListener((message, sender, callback) => {
+  switch (message.type) {
+  case "find":
+    if (!watchServerConf.running) {
+      return false
     }
-  })
-  .then(json => callback(json))
-  .catch(err => {
-    console.log(err)  
-  })
+
+    find(message.value)
+    .then(res => {
+      if (res.ok) {
+        return res.json()
+      } else {
+        return null
+      }
+    })
+    .then(json => callback(json))
+    .catch(err => {
+      console.log(err)  
+    })
+    break
+  case "addTab":
+    registTab(message.value)
+    callback(true)
+    break
+  }
 
   // for asynchronous
   return true
@@ -137,3 +171,4 @@ const updateMenu = (running) => {
 
   chrome.browserAction.setBadgeText({ text: watchServerConf.text[stat] })
 }
+
