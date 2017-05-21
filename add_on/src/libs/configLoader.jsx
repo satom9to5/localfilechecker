@@ -1,5 +1,7 @@
 import sitesYml from 'config/sites.yml'
 
+import uniqueId from 'libs/uniqueId'
+
 class ConfigLoader {
   loadYml(name) {
     if (!name || name == "") {
@@ -13,44 +15,74 @@ class ConfigLoader {
     }
 
     const site = sites[0]
-    let preId = null
 
-    site.target = Object.assign(site.target, 
-      ["current", "parents", "children"].reduce((target, name) => {
-        const manipulates = site.target[name]
+    site.targets = site.targets.map(target => {
+      // unique id
+      target.id = uniqueId()
 
-        if (!Array.isArray(manipulates) || manipulates.length == 0) {
-          return target
-        }
+      // convert value & append id
+      target = Object.assign(target,
+        ["current", "parents", "children"].reduce((obj, name) => {
+          const manipulates = target[name]
 
-        target[name] = manipulates.map(manipulate => Object.getOwnPropertyNames(manipulate).reduce((conf, key)=> {
-          // convert Object to String
-          const val = manipulate[key]
-
-          if (val instanceof Object) {
-            conf[key] = JSON.stringify(val)
-          } else {
-            conf[key] = val
+          if (!Array.isArray(manipulates) || manipulates.length == 0) {
+            return obj
           }
 
-          return conf 
-        }, {})).map(manipulate => {
-          // append unique id.
-          let id = null
-          do {
-            id = Date.now()
-          } while (id == preId)
-          
-          manipulate.id = preId = id
+          // manipulate = current/parents/children array
+          obj[name] = manipulates.map(manipulate => Object.getOwnPropertyNames(manipulate).reduce((conf, key) => {
+            // convert Object to String
+            conf[key] = this.convertValue(manipulate[key])
 
-          return manipulate
-        })
+            return conf 
+          }, {})).map(manipulate => {
+            // unique id
+            manipulate.id = uniqueId()
 
-        return target
-      }, {})
-    )
+            manipulate.actions = manipulate.actions.map(action => {
+              action.id = uniqueId()
+
+              return action
+            })
+
+            return manipulate
+          })
+
+          return obj
+        }, {})
+      )
+
+      return target
+    })
 
     return site
+  }
+
+  convertValue(value) {
+    switch (true) {
+    case (Array.isArray(value)):
+      return value.map(val => this.convertValue(val))
+
+      break
+    case (value instanceof Object):
+      if (Object.getOwnPropertyNames(value).filter(key => {
+         return (value[key] instanceof Object)
+      }).length > 0) {
+        return Object.getOwnPropertyNames(value).reduce((conf, key) => {
+          conf[key] = this.convertValue(value[key])
+          
+          return conf
+        }, {})
+      } else {
+        return JSON.stringify(value)
+      }
+
+      break
+    default:
+      return value
+
+      break
+    }
   }
 }
 

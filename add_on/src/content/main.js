@@ -1,13 +1,13 @@
 import $ from 'jquery'
 
-import Targets from 'content/models/Targets'
+import ElementInfoMap from 'content/models/ElementInfoMap'
 import { find, addTab } from 'content/libs/message'
 
 import storage from 'libs/storage'
 
 import sitesYml from 'config/sites.yml'
 
-const targets = new Targets()
+const infoMap = new ElementInfoMap()
 
 const convertArgs = (args) => {
   if (typeof args != "string") {
@@ -37,69 +37,95 @@ const convertArgs = (args) => {
   }
 }
 
+const convertTarget = (target) => {
+  switch (true) {
+  case (Array.isArray(target)):
+    return target.map(val => convertTarget(val))
+    break
+  case (target instanceof Object):
+    return Object.getOwnPropertyNames(target).reduce((obj, name) => {
+      obj[name] = convertTarget(target[name])
+     
+      return obj
+    }, {})
+
+    break
+  default:
+    return convertArgs(target)
+    break
+  }
+}
+
 const init = (setting) => {
-  setting.match.regexp    = new RegExp(setting.match.pattern)
-  setting.target.current  = setting.target.current.map(target => Object.assign(target, { args: convertArgs(target.args) }))
-  setting.target.parents  = setting.target.parents.map(target => Object.assign(target, { args: convertArgs(target.args) }))
-  setting.target.children = setting.target.children.map(target => Object.assign(target, { args: convertArgs(target.args) }))
+  setting.match.regexp = new RegExp(setting.match.pattern)
+
+  setting.targets = setting.targets.map(target => {
+    target.current  = convertTarget(target.current)
+    target.parents  = convertTarget(target.parents)
+    target.children = convertTarget(target.children)
+    
+    return target
+  })
 }
 
 const findNode = (node, setting) => {
-  const targetKeys = {} // current check keys
+  const queryKeys = {} // current check keys
 
-  $(node).find(setting.target.query).get().forEach(targetElement => {
-    if (!targetElement || !targetElement[setting.target.attr]) {
-      return
-    }
+  setting.targets.forEach(target => {
+    $(node).find(target.query).get().forEach(targetElement => {
+      if (!targetElement || !targetElement[target.attr]) {
+        return
+      }
 
-    const path = targetElement[setting.target.attr].replace(targetElement.origin, '')
-    const matches = path.match(setting.match.regexp)
-    if (!matches || matches.length == 0) {
-      return
-    }
+      const path = targetElement[target.attr].replace(targetElement.origin, '')
+      const matches = path.match(setting.match.regexp)
+      if (!matches || matches.length == 0) {
+        return
+      }
 
-    const matchKey = matches[setting.match.matchnum]
+      const matchKey = matches[setting.match.matchnum]
 
-    targets.add(matchKey, targetElement)
-    targetKeys[matchKey] = matchKey
+      infoMap.add(matchKey, targetElement)
+      queryKeys[matchKey] = matchKey
+    })
   })
 
   // query notify API
-  find(setting.name, targets.getKeysPreQuery(), fileInfos => {
+  find(setting.name, infoMap.getKeysPreQuery(), fileInfos => {
     if (!fileInfos) {
-      targetsManipulate(targetKeys, setting)
+      targetsManipulate(queryKeys, setting)
       return
     }
 
     // check queried flag on request success.
-    Object.getOwnPropertyNames(targets.maps).forEach(key => {
-      targets.maps[key].queried = true
+    Object.getOwnPropertyNames(infoMap.maps).forEach(key => {
+      infoMap.maps[key].queried = true
     })
 
     if (fileInfos.length == 0) {
-      targetsManipulate(targetKeys, setting)
+      targetsManipulate(queryKeys, setting)
       return
     }
 
     Object.getOwnPropertyNames(fileInfos).forEach(key => {
-      if (!targets.maps.hasOwnProperty(key)) {
+      if (!infoMap.maps.hasOwnProperty(key)) {
         return
       }  
 
-      targets.maps[key].files = fileInfos[key].paths
+      infoMap.maps[key].files = fileInfos[key].paths
     })
 
-    targetsManipulate(targetKeys, setting)
+    targetsManipulate(queryKeys, setting)
   })
 }
 
-const targetsManipulate = (targetKeys, setting, isDelete = false) => {
-  Object.getOwnPropertyNames(targetKeys).forEach(key => {
-    if (!targets.maps[key]) {
+const targetsManipulate = (queryKeys, setting, isDelete = false) => {
+  Object.getOwnPropertyNames(queryKeys).forEach(key => {
+    if (!infoMap.maps[key]) {
       return
     }
 
-    const target = targets.maps[key]
+    const target = infoMap.maps[key]
 
     //if (!isDelete && (!target.files || !target.queried || target.elements.length == 0)) {
     if (!isDelete && (!target.files || target.elements.length == 0)) {
@@ -108,7 +134,9 @@ const targetsManipulate = (targetKeys, setting, isDelete = false) => {
 
     // DOM manipulate
     target.elements.forEach(element => {
-      element.manipulate(setting.target, isDelete)
+      setting.targets.forEach(target => {
+        element.manipulate(target, isDelete)
+      })
     })
   })
 }
@@ -133,14 +161,14 @@ const addMessageListener = (setting) => {
   
     const files = req.files
   
-    if (!targets.maps.hasOwnProperty(files.key)) {
+    if (!infoMap.maps.hasOwnProperty(files.key)) {
       return
     }
 
-    targets.maps[files.key].files = files.paths
+    infoMap.maps[files.key].files = files.paths
 
-    const targetKeys = {[files.key]: files.key}
-    targetsManipulate(targetKeys, setting, req.type == "Delete")
+    const queryKeys = {[files.key]: files.key}
+    targetsManipulate(queryKeys, setting, req.type == "Delete")
   })
 }
 

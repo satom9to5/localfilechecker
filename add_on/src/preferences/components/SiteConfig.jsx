@@ -1,13 +1,23 @@
 import React, { Component } from 'react'
 import { toPath } from 'lodash'
 
-import ManipulateConfig from 'preferences/components/ManipulateConfig'
+import TargetConfig from 'preferences/components/TargetConfig'
 
 import configLoader from 'libs/configLoader'
 import getPlaceholder from 'libs/getPlaceholder'
 import storage from 'libs/storage'
+import uniqueId from 'libs/uniqueId'
 
 import sitesYml from 'config/sites.yml'
+
+const defaultTarget = {
+  type: "",
+  query: "",
+  attr: "",
+  current: [],
+  parents: [],
+  children: []
+}
 
 export default class SiteConfig extends Component {
   onChangeField(e) {
@@ -48,45 +58,40 @@ export default class SiteConfig extends Component {
     this.setState(config)
   }
 
-  addManipulateConfig(type) {
-    const { target } = this.state
+  resetConfig() {
+    const { original } = this.state
 
     this.setState({
-      target: Object.assign(target, {
-        [type]: target[type].concat({
-          id: Date.now(),
-          filter: "",
-          query: "",
-          action: "",
-          args: "",
-        })  
+      targets: Object.assign([], original.targets)
+    })
+  }
+
+  // called from child component.
+  addTargetConfig() {
+    const { targets } = this.state
+
+    this.setState({
+      targets: targets.concat(Object.assign({}, defaultTarget, {id: uniqueId()}))
+    })
+  }
+
+  // called from child component.
+  changeTargetConfig(index, target) {
+    const { targets } = this.state
+
+    this.setState({
+      targets: Object.assign([], targets, {
+        [index]: target
       })
     })
   }
 
-  changeManipulateConfig(type, index, key, value) {
-    const { target } = this.state
-
-    const manipulates = target[type]
-
-    this.setState({
-      target: Object.assign(target, {
-        [type]: Object.assign(manipulates, {
-          [index]: Object.assign(manipulates[index], {
-            [key]: value
-          })
-        })
-      })
-    })
-  }
-
-  removeManipulateConfig(type, id) {
-    const { target } = this.state
+  // called from child component.
+  removeTargetConfig(id) {
+    const { targets } = this.state
 
     this.setState({
-      target: Object.assign(target, {
-        [type]: target[type].filter(value => value.id != id)
-      })
+      targets: targets.filter(value => value.id != id)
     })
   }
 
@@ -97,11 +102,15 @@ export default class SiteConfig extends Component {
 
     if (!name) {
       backHome()
+      return
     }
 
+    const site = this.state
+    delete site.original
+    
     storage.get('sites').then(sites => {
       return storage.set({
-        sites: Object.assign({}, sites, {[name]: this.state})
+        sites: Object.assign({}, sites, {[name]: site})
       })
     }).then(sites => {
       backHome()
@@ -113,6 +122,16 @@ export default class SiteConfig extends Component {
 
     if (site) {
       this.setState(site)
+
+      // load default config
+      const config = configLoader.loadYml(site.name)
+      if (!config || !(config instanceof Object)) {
+        return
+      }
+
+      this.setState({
+        original: config
+      })
     } else {
       this.setState({
         name: "",
@@ -121,19 +140,15 @@ export default class SiteConfig extends Component {
           pattern: "",
           matchnum: ""
         },
-        target: {
-          type: "",
-          query: "",
-          attr: "",
-          current: [],
-          parents: [],
-          children: []
-        },
+        targets: [
+          Object.assign({}, defaultTarget, {id: uniqueId()})
+        ],
         file: {
           directory: "",
           pattern: "",
           matchnum: ""
-        }
+        },
+        original: null,
       })
     }
   }
@@ -141,14 +156,15 @@ export default class SiteConfig extends Component {
   render() {
     const { backHome } = this.props // functions
 
-    const { name, host, match, target, file } = this.state
+    const { name, host, match, targets, file } = this.state
+    const { original } = this.state
 
     const placeholder = sitesYml.filter(config => config.name == "youtube")[0]
 
     return (
       <section>
         <div>
-          <h3>Base</h3>
+          <h3 style={{ backgroundColor: "#CCC" }}>Base</h3>
 
           <div style={{ width: "100%", minHeight: "20px" }}>
             <div style={{ float: "right" }}>
@@ -204,84 +220,7 @@ export default class SiteConfig extends Component {
         </div>
 
         <div>
-          <h3>Manipulate DOM</h3>
-
-          <table>
-            <tbody>
-              <tr>
-                <td>
-                  <label htmlFor="target[query]">target html tag</label>
-                </td>
-                <td>
-                  <input type="text" name="target[query]" placeholder={placeholder.target.query} value={target.query} onChange={::this.onChangeField} />
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <label htmlFor="target[attr]">target element attr</label>
-                </td>
-                <td>
-                  <input type="text" name="target[attr]" placeholder={placeholder.target.attr} value={target.attr} onChange={::this.onChangeField} />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div>
-            <h4>target manipulate</h4>
-
-            {target.current.map((currentConf, index) => 
-               <ManipulateConfig
-                 type="current"
-                 value={currentConf}
-                 changeManipulateConfig={::this.changeManipulateConfig}
-                 removeManipulateConfig={::this.removeManipulateConfig}
-                 index={index}
-                 key={currentConf.id}
-               />
-            )}
-
-            <button type="button" onClick={() => this.addManipulateConfig("current")}>add</button>
-          </div>
-
-          <div>
-            <h4>target parents manipulate</h4>
-
-            {target.parents.map((parentConf, index) =>
-              <ManipulateConfig
-                type="parents"
-                value={parentConf}
-                changeManipulateConfig={::this.changeManipulateConfig}
-                removeManipulateConfig={::this.removeManipulateConfig}
-                index={index}
-                key={parentConf.id}
-              />
-            )}
-
-            <button type="button" onClick={() => this.addManipulateConfig("parents")}>add</button>
-          </div>
-
-          <div>
-            <h4>target children manipulate</h4>
-
-            {target.children.map((childConf, index) => 
-              <ManipulateConfig
-                type="children"
-                value={childConf}
-                changeManipulateConfig={::this.changeManipulateConfig}
-                removeManipulateConfig={::this.removeManipulateConfig}
-                index={index}
-                key={childConf.id}
-              />
-            )}
-
-            <button type="button" onClick={() => this.addManipulateConfig("children")}>add</button>
-          </div>
-        </div>
-
-        <div>
-          <h3>Local Directory</h3>
+          <h3 style={{ backgroundColor: "#CCC" }}>Local Directory</h3>
 
           <table>
             <tbody>
@@ -313,10 +252,32 @@ export default class SiteConfig extends Component {
               </tr>
             </tbody>
           </table>
-
-          <button type="submit" onClick={::this.save}>Submit</button>
-          <button type="button" onClick={backHome}>Cancel</button>
         </div>
+
+        <div style={{ border: "solid 1px", padding: "5px" }}>
+          <h3 style={{ backgroundColor: "#CCC" }}>Manipulate DOM</h3>
+
+          {original &&
+            <div style={{ float: "right" }}>
+              <button type="button" onClick={::this.resetConfig}>Reset Config</button>
+            </div>
+          }
+
+          {targets.map((target, index) => 
+            <TargetConfig
+              value={target}
+              index={index}
+              key={target.id}
+              changeTargetConfig={::this.changeTargetConfig}
+              removeTargetConfig={::this.removeTargetConfig}
+            />
+          )}
+
+          <button type="button" onClick={() => this.addTargetConfig()}>Add Target</button>
+        </div>
+
+        <button type="submit" onClick={::this.save}>Submit</button>
+        <button type="button" onClick={backHome}>Cancel</button>
       </section>
     )
   }
