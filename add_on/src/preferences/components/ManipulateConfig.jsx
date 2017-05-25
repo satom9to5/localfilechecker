@@ -24,9 +24,9 @@ export default class ManipulateConfig extends Component {
     changeManipulateConfig(type, index, Object.assign({}, value, {
       actions: value.actions.concat({
         id: uniqueId(),
+        type: "",
         action: "",
-        args_type: "",
-        args: [],
+        args: [""],
       })
     }))
   }

@@ -1,5 +1,9 @@
 import $ from 'jquery'
 
+import definedActions from 'content/libs/definedActions'
+
+import 'content/css/content.css'
+
 export default class ElementInfoMap {
   constructor() {
     this.maps = {}
@@ -38,17 +42,26 @@ class ElementInfo {
   }
 
   add(element) {
-    this.elements.push(new ManipulateElement(element))
+    this.elements.push(new ManipulateElement(element, this))
   }
 
   isDuplicate(element) {
     return this.elements.filter(target => target.element == element).length > 0
   }
+
+  getFilesString() {
+    if (!this.files || this.files.length == 0) {
+      return "empty"
+    }
+
+    return this.files.map(file => `${file.path} [${file.size} bytes]`).join(", <br />")
+  }
 }
 
 class ManipulateElement {
-  constructor(element) {
+  constructor(element, info) {
     this.element  = element
+    this.info     = info
     this.currents = {}
     this.parents  = {}
     this.children = {}
@@ -60,6 +73,14 @@ class ManipulateElement {
         this.deleteCurrent(current)
       } else {
         this.addCurrent(current)
+      }
+    })
+
+    target.parents.forEach(parentConf => {
+      if (isDelete) {
+        this.deleteParent(parentConf)
+      } else {
+        this.addParent(parentConf)
       }
     })
 
@@ -109,6 +130,44 @@ class ManipulateElement {
     this.undoAction(undoActions)
   }
 
+  addParent(parentConf) {
+    if (!parentConf.actions) {
+      return
+    }
+
+    const query = parentConf.query
+
+    if (query && this.parents[query]) {
+      return
+    }
+
+    const $parentElements = $(this.element).parents(query)
+    if (!$parentElements || $parentElements.length == 0) {
+      return
+    }
+
+    const undoActions = this.doAction($parentElements, parentConf)
+    if (undoActions.legnth > 0 && query && !this.parents.hasOwnProperty(query)) {
+      this.parents[filter] = undoActions
+    }
+  }
+
+  deleteParent(parentConf) {
+    if (!parentConf.query || !parentConf.actions) {
+      return
+    }
+
+    const query  = child.query
+
+    const undoActions = this.parents[query]
+    if (this.parents.hasOwnProperty(query)) {
+      delete this.parents[query]
+    }
+
+    this.undoAction(undoActions)
+  }
+
+
   addChild(child) {
     if (!child.actions) {
       return
@@ -151,21 +210,25 @@ class ManipulateElement {
       return []
     }
 
-    const actions = this.getExecActions(manipulate)
+    const actions = manipulate.actions.map(action => definedActions(action, this, $element)).reduce((arr, actions) => {
+      arr = arr.concat(actions)
+
+      return arr
+    }, [])
 
     return actions.map(actionObject => {
-      if (!actionObject.args_type && (!actionObject.args || !Array.isArray(actionObject.args) || actionObject.args.length == 0)) {
+      if (!actionObject.hasOwnProperty('action') || !actionObject.hasOwnProperty('args')) {
         return null
       }
 
-      const { action, args_type, args } = actionObject
+      const { action, args } = actionObject
 
       const undoAction = {
         element: null,
         action,
       }
 
-      switch (action.action) {
+      switch (action) {
       case "append":
         const $actionedElement = $(...args)
 
@@ -176,7 +239,17 @@ class ManipulateElement {
 
         return undoAction
         break
+      case "addClass":
+      case "removeClass":
+        undoAction.element = $element
+        undoAction.action  = action == "addClass" ? "removeClass" : "addClass"
+        
+        $element[action](...args)
+
+        return undoAction
+        break
       case "on":
+      case "hover":
         undoAction.element = $element
         undoAction.action  = action
 
@@ -219,15 +292,5 @@ class ManipulateElement {
         action.element[action.action]()
       }
     })
-  }
-
-  getExecActions(manipulate) {
-    const actions = manipulate.actions
-
-    if (!manipulate.args_type) {
-      return actions
-    } 
-
-    return actions
   }
 }

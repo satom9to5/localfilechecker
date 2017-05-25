@@ -74,7 +74,7 @@ class ConfigLoader {
           return conf
         }, {})
       } else {
-        return JSON.stringify(value)
+        return value
       }
 
       break

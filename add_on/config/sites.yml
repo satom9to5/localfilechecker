@@ -10,24 +10,15 @@
       current: 
         - filter: ".yt-ui-ellipsis.yt-ui-ellipsis-2.yt-uix-sessionlink.spf-link"
           actions: 
-            - action: css
-              args_type: ""
-              args:
-                - color: red
+            - type: popup_info 
       parents: []
       children: 
         - query: "span.title"
           actions:
-            - action: css
-              args_type: ""
-              args:
-                - color: red
+            - type: popup_info
         - query: "span.yt-thumb-simple"
           actions:
-            - action: append
-              args_type: ""
-              args: 
-                - "<span style='color: white; background-color: red; font-size: 12px; height: 15px; line-height: 15px; position: absolute; left: 2px; bottom: 2px; padding: 0 4px 0 4px; opacity: 0.7;'>File Exists</span>"
+            - type: exist_icon
   file:
     directory: ""
     pattern: "^([a-zA-Z0-9\\_-]{11})"

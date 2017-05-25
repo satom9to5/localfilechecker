@@ -35,9 +35,9 @@ export default class TargetConfig extends Component {
         actions: [
           {
             id: uniqueId(),
+            type: "",
             action: "",
-            args_type: "",
-            args: [],
+            args: [""],
           }
         ]
       })

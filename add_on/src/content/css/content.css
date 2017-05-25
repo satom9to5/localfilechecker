@@ -1,0 +1,31 @@
+#localfilecheck_popup {
+  display: none;
+  position: absolute;
+  background-color: #FFF;
+  padding: 5px;
+  border: solid 1px;
+  border-radius: 5px;
+  z-index: 100;
+}
+
+#localfilecheck_popup::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  border: 7px solid transparent;
+  border-top: 7px solid;
+}
+
+.localfilecheck__exist_icon {
+  position: absolute;
+  color: white;
+  background-color: red;
+  font-size: 12px;
+  height: 15px;
+  line-height: 15px;
+  left: 2px;
+  bottom: 2px;
+  padding: 0 4px 0 4px;
+  opacity: 0.7;
+}

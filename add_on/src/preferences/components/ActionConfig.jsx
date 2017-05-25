@@ -2,15 +2,35 @@ import React, { Component } from 'react'
 
 import ArgConfig from 'preferences/components/ArgConfig'
 
+import { actionTypes } from 'content/libs/definedActions'
+
+import enableActionsYml from 'config/enable_actions.yml'
+
 export default class ActionConfig extends Component {
   onChangeField(e) {
     const { value } = this.props // form value
     const { index } = this.props // other value
-    const { changeTargetConfig } = this.props // function
+    const { changeActionConfig } = this.props // function
 
-    changeTargetConfig(index, Object.assign({}, value, {
+    changeActionConfig(index, Object.assign({}, value, {
       [e.target.name]: e.target.value 
     }))
+  }
+
+  onTypeChange(e) {
+    const { value } = this.props // form value
+    const { index } = this.props // other value
+    const { changeActionConfig } = this.props // function
+
+    const changedValue = {
+      type: e.target.value
+    }
+
+    if (changedValue.type != "" && value.args.length == 0) {
+      changedValue.args = [""]
+    }
+
+    changeActionConfig(index, Object.assign({}, value, changedValue))
   }
 
   // called from child component.
@@ -49,8 +69,8 @@ export default class ActionConfig extends Component {
   }
 
   render() {
-    const { value: { id, action, args_type, args } } = this.props
-    const { type, index } = this.props
+    const { value: { id, type, action, args } } = this.props
+    const { index } = this.props
     const { removeActionConfig } = this.props
 
     return (
@@ -62,23 +82,35 @@ export default class ActionConfig extends Component {
             <tbody>
               <tr>
                 <td>
-                  <label htmlFor="action">action (jQuery function)</label>
+                  <label htmlFor="type">use registed attrs of custom action (empty is custom)</label>
                 </td>
                 <td>
-                  <input type="text" name="action" placeholder="css" value={action} onChange={::this.onChangeField} />
+                  <select name="type" value={type} onChange={::this.onTypeChange}>
+                    <option value="">--</option>
+                    {actionTypes.map(actionType =>
+                      <option value={actionType} key={actionType}>{actionType}</option>
+                    )}
+                  </select>
                 </td>
               </tr>
 
+              {type == "" &&
               <tr>
                 <td>
-                  <label htmlFor="args_type">use registed attrs of custom action (empty is custom)</label>
+                  <label htmlFor="action">action (jQuery function)</label>
                 </td>
                 <td>
-                  <input type="text" name="args_type" placeholder="" value={args_type} onChange={::this.onChangeField} />
+                  <select name="action" value={action} onChange={::this.onChangeField}>
+                    <option value="">--</option>
+                    {enableActionsYml.map(enableAction =>
+                      <option value={enableAction} key={enableAction}>{enableAction}</option>
+                    )}
+                  </select>
                 </td>
               </tr>
+              }
     
-              {args.map((arg, index) => 
+              {type == "" && args.map((arg, index) => 
                 <ArgConfig
                   arg={arg}
                   index={index}
