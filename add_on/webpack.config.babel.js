@@ -52,7 +52,14 @@ module.exports = {
       {
         test: /\.css$/,
         exclude: /node_modules/,
-        use: ["style", "css?modules"],
+        use: [
+          {
+            loader: "style-loader"
+          },
+          {
+            loader: "css-loader"
+          }  
+        ]
       },
       {
         test: /\.ya?ml$/,

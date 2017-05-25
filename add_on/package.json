@@ -14,7 +14,9 @@
     "babel-preset-latest": "^6.22.0",
     "babel-preset-react": "^6.23.0",
     "babel-preset-stage-0": "^6.22.0",
+    "css-loader": "^0.28.2",
     "file-loader": "^0.10.0",
+    "style-loader": "^0.18.0",
     "webpack": "^2.2.1",
     "yml-loader": "^1.1.0"
   },
