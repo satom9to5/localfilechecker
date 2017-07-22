@@ -19,6 +19,14 @@
         - query: "span.yt-thumb-simple"
           actions:
             - type: exist_icon
+    - query: "#eow-title"
+      uri: true
+      current:
+        - filter: ""
+          actions:
+            - type: popup_info
+      parents: []
+      children: []
   file:
     directory: ""
     pattern: "^([a-zA-Z0-9\\_-]{11})"

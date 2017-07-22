@@ -73,11 +73,21 @@ const findNode = (node, setting) => {
 
   setting.targets.forEach(target => {
     $(node).find(target.query).get().forEach(targetElement => {
-      if (!targetElement || !targetElement[target.attr]) {
+      if (!targetElement) {
         return
       }
 
-      const path = targetElement[target.attr].replace(targetElement.origin, '')
+      if (target.hasOwnProperty('attr') && !targetElement[target.attr]) {
+        return
+      }
+
+      if (target.hasOwnProperty('uri') && target.uri == false) {
+        return
+      }
+
+      const path = target.uri ?
+        `${location.pathname}${location.search}` :
+        targetElement[target.attr].replace(targetElement.origin, '') 
       const matches = path.match(setting.match.regexp)
       if (!matches || matches.length == 0) {
         return
@@ -112,7 +122,7 @@ const findNode = (node, setting) => {
         return
       }  
 
-      infoMap.maps[key].files = fileInfos[key].paths
+      infoMap.maps[key].paths = fileInfos[key].paths
     })
 
     targetsManipulate(queryKeys, setting)
@@ -127,8 +137,8 @@ const targetsManipulate = (queryKeys, setting, isDelete = false) => {
 
     const target = infoMap.maps[key]
 
-    //if (!isDelete && (!target.files || !target.queried || target.elements.length == 0)) {
-    if (!isDelete && (!target.files || target.elements.length == 0)) {
+    //if (!isDelete && (!target.paths || !target.queried || target.elements.length == 0)) {
+    if (!isDelete && (!target.paths || target.elements.length == 0)) {
       return
     }
 
@@ -153,21 +163,21 @@ const addNodeInsertedListener = (setting) => {
 
 const addMessageListener = (setting) => {
   chrome.runtime.onMessage.addListener((req, sender, callback) => {
-    if (!req.type || !req.files) {
+    if (!req.type || !req.paths) {
       return
     }
   
     //console.log(req)
   
-    const files = req.files
+    const paths = req.paths
   
-    if (!infoMap.maps.hasOwnProperty(files.key)) {
+    if (!infoMap.maps.hasOwnProperty(paths.key)) {
       return
     }
 
-    infoMap.maps[files.key].files = files.paths
+    infoMap.maps[paths.key].paths = paths.paths
 
-    const queryKeys = {[files.key]: files.key}
+    const queryKeys = {[paths.key]: paths.key}
     targetsManipulate(queryKeys, setting, req.type == "Delete")
   })
 }

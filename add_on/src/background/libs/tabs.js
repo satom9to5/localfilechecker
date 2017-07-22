@@ -30,6 +30,7 @@ export const sendMessage = (eventInfo) => {
     return
   }
 
+  console.log(eventInfo)
   Object.getOwnPropertyNames(tabs[name]).forEach(tabId => {
     const tab = tabs[name][tabId]
     chrome.tabs.sendMessage(tab.id, eventInfo)

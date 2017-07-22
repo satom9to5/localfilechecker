@@ -37,7 +37,7 @@ export default class ElementInfoMap {
 class ElementInfo {
   constructor() {
     this.elements = []
-    this.files = null
+    this.paths = null
     this.queried = false
   }
 
@@ -50,11 +50,11 @@ class ElementInfo {
   }
 
   getFilesString() {
-    if (!this.files || this.files.length == 0) {
+    if (!this.paths || this.paths.length == 0) {
       return "empty"
     }
 
-    return this.files.map(file => `${file.path} [${file.size} bytes]`).join(", <br />")
+    return this.paths.map(file => `${file.path} [${file.size} bytes]`).join(", <br />")
   }
 }
 
@@ -104,7 +104,7 @@ class ManipulateElement {
       return
     }
 
-    const $filterCurrent = $(this.element).filter(filter)
+    const $filterCurrent = filter ? $(this.element).filter(filter) : $(this.element)
     if (!$filterCurrent || $filterCurrent.length == 0) {
       return
     }
@@ -157,7 +157,7 @@ class ManipulateElement {
       return
     }
 
-    const query  = child.query
+    const query = parentConf.query
 
     const undoActions = this.parents[query]
     if (this.parents.hasOwnProperty(query)) {

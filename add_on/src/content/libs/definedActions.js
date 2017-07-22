@@ -19,16 +19,15 @@ const actions = {
 
             $targetElement.html(`<p>${manipulateElement.info.getFilesString()}</p>`)
 
-            if ($targetElement.css('display') != 'none') {
-              $targetElement.hide()
-            } else {
-              const offset = $(manipulateElement.element).offset()
-              $targetElement.show().offset({
-                 top: offset.top - $targetElement.height() - 15,
-                 left: offset.left
-              })
-            }
+            const offset = $(manipulateElement.element).offset()
+            $targetElement.show().offset({
+               top: offset.top - $targetElement.height() - 15,
+               left: offset.left
+            })
           },
+          () => {
+            popupElement().hide()
+          }
         ]
       }
     ]

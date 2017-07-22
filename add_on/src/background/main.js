@@ -95,6 +95,7 @@ const watchServerMenuClickListener = info => {
       })
     })
     .then(response => {
+      console.log(response)
       if (response && response.success) {
         updateMenu(true)
 
