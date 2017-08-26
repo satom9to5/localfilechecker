@@ -21,3 +21,7 @@ func Command(name string, arg ...string) *Cmd {
 func SetPlatform(pf string) {
 	platform = pf
 }
+
+func (c Cmd) Command() *exec.Cmd {
+	return c.command
+}

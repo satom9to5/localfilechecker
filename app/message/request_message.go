@@ -7,11 +7,15 @@ import (
 	"../logs"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -27,6 +31,7 @@ var (
 	logfilename = "watch_server.log"
 	pidfile, _  = filepath.Abs("../pid/watch_server.pid")
 	isBinary    = false
+	errorCheck  = flag.Bool("error_check", false, "error check mode")
 )
 
 type RequestMessage struct {
@@ -86,12 +91,23 @@ func (rm *RequestMessage) serverStart() error {
 	command := ""
 	params := []string{}
 
+	curDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	sep := string(os.PathSeparator)
+
 	if isBinary {
-		argsDir := filepath.Dir(os.Args[0])
-		command = fmt.Sprintf(argsDir+"/../../watch_server/bin/%s", filepath.Base(os.Args[0]))
+		command = strings.Join([]string{curDir, "..", "..", "watch_server", "bin", filepath.Base(os.Args[0])}, sep)
 	} else {
 		command = "go"
-		params = []string{"run", "../watch_server/main.go", "-debug"}
+		params = append(
+			params,
+			"run",
+			strings.Join([]string{curDir, "..", "watch_server", "main.go"}, sep),
+			"-debug",
+		)
 	}
 
 	params = append(params, "-port", strconv.Itoa(rm.Port))
@@ -127,11 +143,27 @@ func (rm *RequestMessage) serverStart() error {
 
 	logs.GetLogger().Println(command, params)
 
+	var stderr io.ReadCloser
+
 	// Server Start
 	exec.SetPlatform(rm.Platform)
 	cmd := exec.Command(command, params...)
+	if *errorCheck {
+		stderr, _ = cmd.Command().StderrPipe()
+	}
 	if err = cmd.Start(); err != nil {
 		return err
+	}
+
+	// Error Check
+	if *errorCheck && stderr != nil {
+		errBytes, err := ioutil.ReadAll(stderr)
+		if err != nil {
+			return err
+		}
+		if errBytes != nil {
+			return errors.New(string(errBytes))
+		}
 	}
 
 	return nil
