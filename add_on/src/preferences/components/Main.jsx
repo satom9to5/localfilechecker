@@ -52,7 +52,9 @@ export default class Main extends Component {
       const a = document.createElement('a')
         
       a.href = window.URL.createObjectURL(blob)
-      a.download = 'localfilecheck.json'
+      a.download = 'localfilechecker.json'
+      a.target = '_self' // required FireFox
+      document.body.appendChild(a) // reqird FireFox
       a.click()
     })    
   }

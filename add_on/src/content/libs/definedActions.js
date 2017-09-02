@@ -68,7 +68,7 @@ const popupElement = () => {
 
   if ($element.length == 0) {
     $element = $("<div id='localfilecheck_popup'></div>")
-    $(body).append($element)
+    $('body').append($element)
   }
 
   return $element
