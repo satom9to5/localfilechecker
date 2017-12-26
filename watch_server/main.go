@@ -18,8 +18,8 @@ import (
 func main() {
 	flag.Parse()
 
-	pidfileCheck()
 	setLog()
+	pidfileCheck()
 	setConfig()
 
 	r := mux.NewRouter()
@@ -28,6 +28,7 @@ func main() {
 	r.HandleFunc("/health", handle.Health) // health check
 	r.HandleFunc("/regist", handle.Regist)
 	r.HandleFunc("/unregist/{name}", handle.Unregist)
+	r.HandleFunc("/summary", handle.Summaries)
 	r.HandleFunc("/notify", handle.Notify)
 	r.HandleFunc("/{name}/{key}", handle.FindSingle) // get single
 	r.HandleFunc("/{name}", handle.FindMulti)        // get multi on JSON parameter.

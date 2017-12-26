@@ -25,7 +25,9 @@ func AddDirectoryInfo(config config.Config) error {
 		return errors.New(fmt.Sprintf("%s is not directory", config.Directory))
 	}
 
-	registedDirectoryInfo[config.Name] = NewDirectoryInfo(config)
+	if di := NewDirectoryInfo(config); di != nil {
+		registedDirectoryInfo[config.Name] = di
+	}
 
 	return nil
 }
@@ -39,31 +41,31 @@ func RemoveDirectoryInfo(name string) error {
 	}
 }
 
-func Get(name, key string) *filesInfo {
-	fdi := registedDirectoryInfo.get(name)
-	if fdi == nil {
+func Get(name, key string) *pathsInfo {
+	di := registedDirectoryInfo.get(name)
+	if di == nil {
 		return nil
 	}
 
-	return fdi.get(key)
+	return di.get(key)
 }
 
-func GetMulti(name string, keys []string) filesInfoMap {
-	fdi := registedDirectoryInfo.get(name)
-	if fdi == nil {
+func GetMulti(name string, keys []string) pathsInfoMap {
+	di := registedDirectoryInfo.get(name)
+	if di == nil {
 		return nil
 	}
 
-	return fdi.getMulti(keys)
+	return di.getMulti(keys)
 }
 
-func GetAll(name string) filesInfoMap {
-	fdi := registedDirectoryInfo.get(name)
-	if fdi == nil {
+func GetAll(name string) pathsInfoMap {
+	di := registedDirectoryInfo.get(name)
+	if di == nil {
 		return nil
 	}
 
-	return fdi.getAll()
+	return di.getAll()
 }
 
 func (dim directoryInfoMap) get(name string) *directoryInfo {
@@ -72,4 +74,18 @@ func (dim directoryInfoMap) get(name string) *directoryInfo {
 	} else {
 		return nil
 	}
+}
+
+func GetDirectoryInfoSummaries() map[string]int {
+	summaries := map[string]int{}
+
+	for name, info := range registedDirectoryInfo {
+		if info == nil {
+			summaries[name] = 0
+		} else {
+			summaries[name] = len(info.psiMap)
+		}
+	}
+
+	return summaries
 }

@@ -17,6 +17,7 @@ func FindSingle(w http.ResponseWriter, r *http.Request) {
 		return
 	default:
 		responseText(w, "Method is not GET/OPTIONS.", http.StatusMethodNotAllowed)
+		return
 	}
 
 	vars := mux.Vars(r)

@@ -2,26 +2,29 @@ package notify
 
 import (
 	"fmt"
-	"os"
+	"time"
 )
 
 type pathInfo struct {
-	Path string `json:"path"`
-	Size int64  `json:"size"`
+	Path    string    `json:"path"`
+	Size    int64     `json:"size"`
+	ModTime time.Time `json:"mod_time"`
+}
+
+func NewPathInfo(fi fileInfo) *pathInfo {
+	return &pathInfo{
+		Path:    fi.Path(),
+		Size:    fi.Size(),
+		ModTime: fi.ModTime(),
+	}
 }
 
 func (pi pathInfo) String() string {
-	return fmt.Sprintf("Path:%s, Size:%d", pi.Path, pi.Size)
+	return fmt.Sprintf("Path:%s, Size:%d, ModTime:%s", pi.Path, pi.Size, pi.ModTime.String())
 }
 
-func (pi *pathInfo) updateSize() {
-	pi.Size = getSize(pi.Path)
-}
-
-func getSize(path string) int64 {
-	if fi, err := os.Stat(path); err == nil {
-		return fi.Size()
-	} else {
-		return 0
-	}
+func (pi *pathInfo) update(fi fileInfo) {
+	pi.Path = fi.Path()
+	pi.Size = fi.Size()
+	pi.ModTime = fi.ModTime()
 }

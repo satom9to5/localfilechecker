@@ -42,6 +42,7 @@ func reader(ws *websocket.Conn) {
 
 func writer(ws *websocket.Conn) {
 	defer func() {
+		log.Println("[watch_server] url: notify closed.")
 		ws.Close()
 	}()
 
