@@ -1,164 +1,165 @@
-import $ from 'jquery'
+import ManipulateElements from 'content/models/ManipulateElements'
 
-import ElementInfoMap from 'content/models/ElementInfoMap'
 import { find, addTab } from 'content/libs/message'
 
 import storage from 'libs/storage'
+import settingLoad from 'libs/settingLoad'
 
 import sitesYml from 'config/sites.yml'
 
-const infoMap = new ElementInfoMap()
+const manipulateElements = new ManipulateElements()
 
-const convertArgs = (args) => {
-  if (typeof args != "string") {
-    return args
+const urlMatch = (element, setting, manipulate) => {
+  if (!(setting.match) || !(setting.match.regexp) || !(setting.match.matchnum)) {
+    return null
   }
 
-  args = args.trim()
-
-  switch (args.substr(0, 1)) {
-    case '{':
-      if (args.substr(-1) != '}') {
-        return args
-      } 
-
-      return JSON.parse(args)
-      break
-    case '[':
-      if (args.substr(-1) != ']') {
-        return args
-      } 
-
-      return JSON.parse(args)
-      break
-    default:
-      return args
-      break
+  if (!(manipulate.attributeName in element) || typeof element[manipulate.attributeName] != 'string') {
+    return null
   }
-}
 
-const convertTarget = (target) => {
-  switch (true) {
-  case (Array.isArray(target)):
-    return target.map(val => convertTarget(val))
-    break
-  case (target instanceof Object):
-    return Object.getOwnPropertyNames(target).reduce((obj, name) => {
-      obj[name] = convertTarget(target[name])
-     
-      return obj
-    }, {})
-
-    break
-  default:
-    return convertArgs(target)
-    break
+  const path = element[manipulate.attributeName].replace(location.origin, '') 
+  const matches = path.match(setting.match.regexp)
+  if (!matches || matches.length == 0) {
+    return null
   }
+
+  return matches[setting.match.matchnum]
 }
 
-const init = (setting) => {
-  setting.match.regexp = new RegExp(setting.match.pattern)
+const getQueryKeys = (setting, records) => {
+  const queryKeys = {} // found keys for query
 
-  setting.targets = setting.targets.map(target => {
-    target.current  = convertTarget(target.current)
-    target.parents  = convertTarget(target.parents)
-    target.children = convertTarget(target.children)
-    
-    return target
-  })
-}
+  records.forEach(record => {
+    const target = (record.type == "characterData" ? record.target.parentNode : record.target) || {}
+    // record.target is text when type is characterData
+    const { localName, _manipulateElement } = target
 
-const findNode = (node, setting) => {
-  const queryKeys = {} // current check keys
-
-  setting.targets.forEach(target => {
-    $(node).find(target.query).get().forEach(targetElement => {
-      if (!targetElement) {
+    setting.manipulates.filter(manipulate => manipulate.observers.filter(observer => observer == record.type).length > 0).forEach(manipulate => {
+      if (!(manipulate.hasOwnProperty('query')) || !(manipulate.hasOwnProperty('attributeName'))) {
         return
       }
 
-      if (target.hasOwnProperty('attr') && !targetElement[target.attr]) {
-        return
+      const { query, attributeName } = manipulate
+
+      let matchKey = null
+
+      switch (record.type) {
+      case "childList":
+        Array.from(target.querySelectorAll(query)).forEach(element => {
+          if (!(attributeName in element) || element[attributeName] == '') {
+            return
+          }
+
+          matchKey = urlMatch(element, setting, manipulate)
+          
+          if (!matchKey) {
+            return
+          }
+
+          manipulateElements.add(matchKey, manipulate, element)
+
+          if (!(queryKeys.hasOwnProperty(matchKey))) {
+            queryKeys[matchKey] = []
+          }
+
+          queryKeys[matchKey].push(element)
+        })
+
+        break
+      case "attributes":
+        if (query != localName || attributeName != record.attributeName) {
+          return
+        }
+
+        if (_manipulateElement) {
+          _manipulateElement.unset()
+        }
+
+        // other movie link on ytd-watch OR current node update
+        matchKey = urlMatch(target, setting, manipulate)
+        
+        if (!matchKey) {
+          return
+        }
+
+        manipulateElements.add(matchKey, manipulate, target)
+
+        if (!(queryKeys.hasOwnProperty(matchKey))) {
+          queryKeys[matchKey] = []
+        }
+
+        queryKeys[matchKey].push(target)
+        break
+      case "characterData":
+        if (query != localName) {
+          return
+        }
+
+        if (_manipulateElement) {
+          _manipulateElement.unset()
+        }
+
+        // other movie link on ytd-watch OR current node update
+        matchKey = urlMatch(target, setting, manipulate)
+        
+        if (!matchKey) {
+          return
+        }
+
+        // target is textNode
+        manipulateElements.add(matchKey, manipulate, target)
+
+        if (!(queryKeys.hasOwnProperty(matchKey))) {
+          queryKeys[matchKey] = []
+        }
+
+        queryKeys[matchKey].push(target)
+        break
       }
-
-      if (target.hasOwnProperty('uri') && target.uri == false) {
-        return
-      }
-
-      const path = target.uri ?
-        `${location.pathname}${location.search}` :
-        targetElement[target.attr].replace(targetElement.origin, '') 
-      const matches = path.match(setting.match.regexp)
-      if (!matches || matches.length == 0) {
-        return
-      }
-
-      const matchKey = matches[setting.match.matchnum]
-
-      infoMap.add(matchKey, targetElement)
-      queryKeys[matchKey] = matchKey
     })
   })
 
-  // query notify API
-  find(setting.name, infoMap.getKeysPreQuery(), fileInfos => {
-    if (!fileInfos) {
-      targetsManipulate(queryKeys, setting)
-      return
-    }
-
-    // check queried flag on request success.
-    Object.getOwnPropertyNames(infoMap.maps).forEach(key => {
-      infoMap.maps[key].queried = true
-    })
-
-    if (fileInfos.length == 0) {
-      targetsManipulate(queryKeys, setting)
-      return
-    }
-
-    Object.getOwnPropertyNames(fileInfos).forEach(key => {
-      if (!infoMap.maps.hasOwnProperty(key)) {
-        return
-      }  
-
-      infoMap.maps[key].paths = fileInfos[key].paths
-    })
-
-    targetsManipulate(queryKeys, setting)
-  })
+  return queryKeys
 }
 
-const targetsManipulate = (queryKeys, setting, isDelete = false) => {
-  Object.getOwnPropertyNames(queryKeys).forEach(key => {
-    if (!infoMap.maps[key]) {
+const setObserver = (setting) => {
+  const settingObserver = new MutationObserver((records, observer) => {
+    const queryKeys = getQueryKeys(setting, records)
+
+    //console.log(manipulateElements.manipulateElements.filter(manipulateElement => manipulateElement.visible()))
+
+    if (Object.getOwnPropertyNames(queryKeys).length == 0) {
       return
     }
 
-    const target = infoMap.maps[key]
+    // send notify API
+    find(setting.name, Object.getOwnPropertyNames(queryKeys), pathsInfoMap => {
+      //console.log(fileInfos)
+      Object.getOwnPropertyNames(pathsInfoMap)
+        .filter(key => queryKeys.hasOwnProperty(key))
+        .forEach(key => {
+          const elements = queryKeys[key]
 
-    //if (!isDelete && (!target.paths || !target.queried || target.elements.length == 0)) {
-    if (!isDelete && (!target.paths || target.elements.length == 0)) {
-      return
-    }
-
-    // DOM manipulate
-    target.elements.forEach(element => {
-      setting.targets.forEach(target => {
-        element.manipulate(target, isDelete)
-      })
+          elements.filter(element => element.hasOwnProperty('_manipulateElement') && element._manipulateElement.key == key)
+            .forEach(element => {
+              // manipulate currents/parents/children
+              element._manipulateElement.set(pathsInfoMap[key])
+            })
+        })
     })
   })
-}
 
-const addNodeInsertedListener = (setting) => {
-  document.body.addEventListener('DOMNodeInserted', e => {
-    switch (e.target.nodeType) {
-    case Node.ELEMENT_NODE:
-      findNode(e.target, setting)
-      break
-    }
-  })
+  const options = {
+    childList: true,
+    attributes: true,
+    characterData: true,
+    subtree: true,
+    attributeOldValue: true,
+    characterDataOldValue: true
+  }
+
+  settingObserver.observe(document.body, options)
 }
 
 const addMessageListener = (setting) => {
@@ -166,8 +167,6 @@ const addMessageListener = (setting) => {
     if (!req.type || !req.paths) {
       return
     }
-  
-    //console.log(req)
   
     const paths = req.paths
   
@@ -178,35 +177,14 @@ const addMessageListener = (setting) => {
     infoMap.maps[paths.key].paths = paths.paths
 
     const queryKeys = {[paths.key]: paths.key}
-    targetsManipulate(queryKeys, setting, req.type == "Delete")
+    //targetsManipulate(queryKeys, setting, req.type == "Delete")
   })
 }
 
-(async () => {
-  const sites = await storage.get('sites')
-
-  if (!sites || !sites instanceof Object) {
-    return null
-  }
-
-  const targetNames = Object.getOwnPropertyNames(sites).filter(name => {
-    return sites[name].host == location.origin
-  })
-
-  if (!targetNames || targetNames.length != 1) {
-    return null
-  }
-
-  return sites[targetNames[0]]
-})().then(setting => {
-  if (!setting) {
-    return
-  }
-
-  init(setting)
+settingLoad(setting => {
   addTab(setting.name)
-  findNode(document, setting)
-  addNodeInsertedListener(setting)
+  //findNode(document, setting)
+  setObserver(setting)
   addMessageListener(setting)
 })
 

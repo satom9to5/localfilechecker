@@ -142,9 +142,7 @@ export default class Main extends Component {
           </section>
 
           <section>
-            <h2>
-              Server
-            </h2>
+            <h2>Server</h2>
 
             <div>
               <span>listen port: </span>

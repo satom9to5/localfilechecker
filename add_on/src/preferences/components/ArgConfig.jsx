@@ -11,16 +11,16 @@ export default class ArgConfig extends Component {
 
   render() {
     const { arg } = this.props
-    const { type, index } = this.props
+    const { type, index, disabled } = this.props
     const { removeArgConfig } = this.props
 
     return (
       <tr>
-        <td>
+        <th>
           <label htmlFor="arg">attrs of action</label>
-        </td>
+        </th>
         <td>
-          <textarea name="arg" placeholder="{ color: red }" rows="20" cols="50" value={arg} onChange={::this.onChangeField} />
+          <textarea name="arg" placeholder="{ color: red }" rows="20" cols="50" value={arg} disabled={disabled} onChange={::this.onChangeField} />
 
           <button type="button" onClick={() => removeArgConfig(index)}>Delete arg</button>
         </td>

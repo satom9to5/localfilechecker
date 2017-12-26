@@ -1,43 +1,52 @@
-import $ from 'jquery'
+import 'content/css/content.css'
 
 const actions = {
-  popup_info: (manipulateElement, $element) => {
+  popup_info: (element, pathsInfo = null) => {
     return [
       {
-        action: "css",
+        type: "attrs",
         args: [
           {
-            color: "red"
+            style: {
+              color: "red"
+            }
           }
         ]
       },
       {
-        action: "hover",
+        type: "hover",
         args: [
           () => {
-            const $targetElement = popupElement()
+            const targetElement = popupElement()
 
-            $targetElement.html(`<p>${manipulateElement.info.getFilesString()}</p>`)
+            // get position of event element
+            const elementBox = element.getBoundingClientRect()
+            const windowView = element.ownerDocument.defaultView
 
-            const offset = $(manipulateElement.element).offset()
-            $targetElement.show().offset({
-               top: offset.top - $targetElement.height() - 15,
-               left: offset.left
-            })
+            // set text
+            targetElement.innerHTML     = `<p>${pathsInfo.getFilesString()}</p>`
+            targetElement.style.display = 'block'
+
+            // set position
+            const targetElementBox   = targetElement.getBoundingClientRect()
+            targetElement.style.top  = `${elementBox.top  + windowView.pageYOffset - targetElementBox.height - 15}px`
+            targetElement.style.left = `${elementBox.left + windowView.pageXOffset}px`
           },
           () => {
-            popupElement().hide()
+            popupElement().style.display = 'none'
           }
         ]
       }
     ]
   },
-  exist_icon: (manipulateElement, $element) => {
-    const fileExistElement = "<span class='localfilecheck__exist_icon'>File Exists</span>"
+  exist_icon: (element, pathsInfo = null) => {
+    const fileExistElement     = document.createElement('span')
+    fileExistElement.className = 'local_file_check__exist_icon'
+    fileExistElement.innerHTML = 'File Exists'
 
     return [
       {
-        action: "append",
+        type: "append",
         args: [
           fileExistElement
         ] 
@@ -46,32 +55,31 @@ const actions = {
   },
 }
 
+const popupElementId = 'local_file_check_popup'
+const popupElement = () => {
+  const foundElement = document.getElementById(popupElementId)
+
+  if (foundElement) {
+    return foundElement
+  }
+
+  document.body.insertAdjacentHTML('beforeend', `<div id='${popupElementId}'></div>`)
+  return document.getElementById(popupElementId)
+}
+
 export const actionTypes = Object.getOwnPropertyNames(actions)
 
-const definedActions = (targetAction, manipulateElement, $element) => {
-  if (actions.hasOwnProperty(targetAction.type)) {
-    return actions[targetAction.type](manipulateElement, $element)
-  } else {
-    return targetAction
-  }
-}
-
-const addClassAction = (className) => {
-  return {
-    action: "addClass",
-    args: [className],
-  }
-}
-
-const popupElement = () => {
-  let $element = $("#localfilecheck_popup") 
-
-  if ($element.length == 0) {
-    $element = $("<div id='localfilecheck_popup'></div>")
-    $('body').append($element)
+const definedActions = (action, element, pathsInfo = null) => {
+  if (actions.hasOwnProperty(action.type)) {
+    // convert
+    return actions[action.type](element, pathsInfo)
   }
 
-  return $element
+  if (typeof action == 'array') {
+    return action
+  }
+
+  return [action]
 }
 
 export default definedActions

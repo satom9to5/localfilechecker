@@ -69,23 +69,23 @@ export default class ActionConfig extends Component {
   }
 
   render() {
-    const { value: { id, type, action, args } } = this.props
-    const { index } = this.props
-    const { removeActionConfig } = this.props
+    const { value: { id, type, action, args } } = this.props // form value
+    const { index, disabled } = this.props // other value
+    const { removeActionConfig } = this.props // functions
 
     return (
-      <div style={{ border: "solid 1px", padding: "5px" }}>
-        <h4 style={{ backgroundColor: "#CCC" }}>Action {index + 1}</h4>
+      <div className="form_section">
+        <h4>Action {index + 1}</h4>
 
         <div>
           <table>
             <tbody>
               <tr>
-                <td>
+                <th>
                   <label htmlFor="type">use registed attrs of custom action (empty is custom)</label>
-                </td>
+                </th>
                 <td>
-                  <select name="type" value={type} onChange={::this.onTypeChange}>
+                  <select name="type" value={type} disabled={disabled} onChange={::this.onTypeChange}>
                     <option value="">--</option>
                     {actionTypes.map(actionType =>
                       <option value={actionType} key={actionType}>{actionType}</option>
@@ -96,11 +96,11 @@ export default class ActionConfig extends Component {
 
               {type == "" &&
               <tr>
-                <td>
+                <th>
                   <label htmlFor="action">action (jQuery function)</label>
-                </td>
+                </th>
                 <td>
-                  <select name="action" value={action} onChange={::this.onChangeField}>
+                  <select name="action" value={action} disabled={disabled} onChange={::this.onChangeField}>
                     <option value="">--</option>
                     {enableActionsYml.map(enableAction =>
                       <option value={enableAction} key={enableAction}>{enableAction}</option>
@@ -115,6 +115,7 @@ export default class ActionConfig extends Component {
                   arg={arg}
                   index={index}
                   key={index}
+                  disabled={disabled}
                   changeArgConfig={::this.changeArgConfig}
                   removeArgConfig={::this.removeArgConfig} 
                 />

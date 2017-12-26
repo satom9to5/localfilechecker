@@ -1,0 +1,48 @@
+input {
+  width: 100%;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+button {
+  margin: 5px 5px 0 0;
+}
+
+table {
+  width: 100%;
+}
+
+table th {
+  width: 20%;
+  text-align: left;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  padding: 5px;
+  border: 1px solid #000;
+  border-radius: 5px;
+  background-color: #cccccc;
+}
+
+.center {
+  text-align: center;
+}
+
+.float_right {
+  float: right;
+}
+
+.form_section {
+  border: 1px solid #000;
+  border-radius: 5px;
+  margin: 0 0 10px 0;
+  padding: 0 8px 10px 8px;
+}
+
+.right_button {
+  float: right;
+}
+
+.right_button button {
+  margin: 0;
+}

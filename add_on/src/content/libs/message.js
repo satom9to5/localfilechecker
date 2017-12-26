@@ -1,5 +1,7 @@
 import Message from 'libs/Message'
 
+import pathsInfoMap from 'content/models/PathsInfoMap'
+
 export const find = (name, keys, callback) => {
   if (!keys) {
     callback(null)
@@ -11,13 +13,21 @@ export const find = (name, keys, callback) => {
     return
   }
 
+  const queryKeys = pathsInfoMap.extractTargetKeys(keys)
+
+  pathsInfoMap.updatesLastQueryTime(keys)
+
   const message = new Message("find", {
     name,
-    keys,
+    keys: queryKeys,
   })
 
+  // res == fileInfos
   chrome.runtime.sendMessage(message, (res) => {
-    callback(res)
+    // update PathsInfoMap
+    pathsInfoMap.sets(keys, res)
+
+    callback(pathsInfoMap.gets(keys))
   })
 }
 

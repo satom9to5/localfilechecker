@@ -57,26 +57,22 @@ export default class ManipulateConfig extends Component {
 
   render() {
     const { value: { id, filter, query, actions } } = this.props
-    const { type, index } = this.props
+    const { type, index, disabled } = this.props
     const { removeManipulateConfig } = this.props
 
     return (
-      <div style={{ border: "solid 1px", padding: "5px" }}>
-        <h4 style={{ backgroundColor: "#CCC" }}>{type} {index + 1}</h4>
+      <div className="form_section">
+        <h4>{type} {index + 1}</h4>
 
         <div>
           <table>
             <tbody>
               <tr>
-                <td>
+                <th>
                   <label htmlFor="query">query selector (jQuery selector)</label>
-                </td>
+                </th>
                 <td>
-                  {type == "current" ?
-                    <input type="text" name="filter" placeholder="span.title" value={filter} onChange={::this.onChangeField} />
-                  :
-                    <input type="text" name="query" placeholder="span.title" value={query} onChange={::this.onChangeField} />
-                  }
+                  <input type="text" name={type == "current" ? "filter" : "query"} placeholder="span.title" value={query} disabled={disabled} onChange={::this.onChangeField} />
                 </td>
               </tr>
             </tbody>
@@ -85,6 +81,7 @@ export default class ManipulateConfig extends Component {
           {actions.map((action, index) => 
             <ActionConfig
               value={action}
+              disabled={disabled}
               index={index}
               key={action.id}
               changeActionConfig={::this.changeActionConfig}

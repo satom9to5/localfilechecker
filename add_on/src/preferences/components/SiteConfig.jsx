@@ -55,7 +55,7 @@ export default class SiteConfig extends Component {
       return
     }
 
-    this.setState(config)
+    this.setState(Object.assign(config, { original: config }))
   }
 
   resetConfig() {
@@ -134,6 +134,7 @@ export default class SiteConfig extends Component {
       })
     } else {
       this.setState({
+        is_custom: true,
         name: "",
         host: "",
         match: {
@@ -156,15 +157,18 @@ export default class SiteConfig extends Component {
   render() {
     const { backHome } = this.props // functions
 
-    const { name, host, match, targets, file } = this.state
-    const { original } = this.state
+    const { file } = this.state // enable always edit form values
+    const { is_custom, original } = this.state
 
     const placeholder = sitesYml.filter(config => config.name == "youtube")[0]
+    const disabled    = original && !is_custom
+
+    const { name, host, match, targets } = disabled ? original : this.state
 
     return (
       <section>
         <div>
-          <h3 style={{ backgroundColor: "#CCC" }}>Base</h3>
+          <h3>Base</h3>
 
           <div style={{ width: "100%", minHeight: "20px" }}>
             <div style={{ float: "right" }}>
@@ -180,39 +184,53 @@ export default class SiteConfig extends Component {
 
           <table>
             <tbody>
+              {original &&
+                <tr>
+                  <th>
+                    <label htmlFor="is_custom">config type</label>
+                  </th>
+                  <td>
+                    <select name="is_custom" value={is_custom} onChange={::this.onChangeField}>
+                      <option value="">use config</option>
+                      <option value="true">custom</option>
+                    </select>
+                  </td>
+                </tr>
+              }
+
               <tr>
-                <td>
+                <th>
                   <label htmlFor="name">name</label>
-                </td>
+                </th>
                 <td>
-                  <input type="text" name="name" placeholder={placeholder.name} value={name} onChange={::this.onChangeField} />
+                  <input type="text" name="name" placeholder={placeholder.name} value={name} disabled={disabled} onChange={::this.onChangeField} />
                 </td>
               </tr>
 
               <tr>
-                <td>
+                <th>
                   <label htmlFor="host">host</label>
-                </td>
+                </th>
                 <td>
-                  <input type="url" name="host" placeholder={placeholder.host} value={host} onChange={::this.onChangeField} />
+                  <input type="url" name="host" placeholder={placeholder.host} value={host} disabled={disabled} onChange={::this.onChangeField} />
                 </td>
               </tr>
 
               <tr>
-                <td>
+                <th>
                   <label htmlFor="match[pattern]">url match pattern</label>
-                </td>
+                </th>
                 <td>
-                  <input type="text" name="match[pattern]" placeholder={placeholder.match.pattern} value={match.pattern} onChange={::this.onChangeField} />
+                  <input type="text" name="match[pattern]" placeholder={placeholder.match.pattern} value={match.pattern} disabled={disabled} onChange={::this.onChangeField} />
                 </td>
               </tr>
 
               <tr>
-                <td>
+                <th>
                   <label htmlFor="match[matchnum]">url matching capture num</label>
-                </td>
+                </th>
                 <td>
-                  <input type="number" name="match[matchnum]" placeholder={placeholder.match.matchnum} value={match.matchnum} onChange={::this.onChangeField} />
+                  <input type="number" name="match[matchnum]" placeholder={placeholder.match.matchnum} value={match.matchnum} disabled={disabled} onChange={::this.onChangeField} />
                 </td>
               </tr>
             </tbody>
@@ -220,32 +238,32 @@ export default class SiteConfig extends Component {
         </div>
 
         <div>
-          <h3 style={{ backgroundColor: "#CCC" }}>Local Directory</h3>
+          <h3>Local Directory</h3>
 
           <table>
             <tbody>
               <tr>
-                <td>
+                <th>
                   <label htmlFor="file[directory]">directory</label>
-                </td>
+                </th>
                 <td>
                   <input type="text" name="file[directory]" placeholder={getPlaceholder("file[directory]")} value={file.directory} onChange={::this.onChangeField} />
                 </td>
               </tr>
 
               <tr>
-                <td>
+                <th>
                   <label htmlFor="file[pattern]">match pattern</label>
-                </td>
+                </th>
                 <td>
                   <input type="text" name="file[pattern]" placeholder={placeholder.file.pattern} value={file.pattern} onChange={::this.onChangeField} />
                 </td>
               </tr>
 
               <tr>
-                <td>
+                <th>
                   <label htmlFor="file[matchnum]">matching capture num</label>
-                </td>
+                </th>
                 <td>
                   <input type="number" name="file[matchnum]" placeholder={placeholder.file.matchnum} value={file.matchnum} onChange={::this.onChangeField} />
                 </td>
@@ -254,20 +272,23 @@ export default class SiteConfig extends Component {
           </table>
         </div>
 
-        <div style={{ border: "solid 1px", padding: "5px" }}>
-          <h3 style={{ backgroundColor: "#CCC" }}>Manipulate DOM</h3>
+        <div>
+          <h3>
+            Manipulate DOM
 
-          {original &&
-            <div style={{ float: "right" }}>
-              <button type="button" onClick={::this.resetConfig}>Reset Config</button>
-            </div>
-          }
+            {original &&
+              <div className="right_button">
+                <button type="button" onClick={::this.resetConfig}>Reset Config</button>
+              </div>
+            }
+          </h3>
 
           {targets.map((target, index) => 
             <TargetConfig
               value={target}
               index={index}
               key={target.id}
+              disabled={disabled}
               changeTargetConfig={::this.changeTargetConfig}
               removeTargetConfig={::this.removeTargetConfig}
             />
@@ -276,8 +297,10 @@ export default class SiteConfig extends Component {
           <button type="button" onClick={() => this.addTargetConfig()}>Add Target</button>
         </div>
 
-        <button type="submit" onClick={::this.save}>Submit</button>
-        <button type="button" onClick={backHome}>Cancel</button>
+        <div className="center">
+          <button type="submit" onClick={::this.save}>Submit</button>
+          <button type="button" onClick={backHome}>Cancel</button>
+        </div>
       </section>
     )
   }

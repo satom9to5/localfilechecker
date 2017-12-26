@@ -4,30 +4,56 @@
     pattern: "^/watch\\?v=([a-zA-Z0-9\\_-]{11})"
     matchnum: 1
     regexp: null
-  targets: 
-    - query: a
-      attr: href
-      current: 
-        - filter: ".yt-ui-ellipsis.yt-ui-ellipsis-2.yt-uix-sessionlink.spf-link"
-          actions: 
-            - type: popup_info 
-      parents: []
-      children: 
-        - query: "span.title"
+  is_custom: false # enable edit
+  manipulates:
+    - observers:
+        - childList
+        - attributes
+      query: a
+      attributeName: href
+      currents: 
+        - name: "movie title link of watch & search result page"
+          selector: "#video-title.yt-simple-endpoint.style-scope.ytd-video-renderer"
           actions:
             - type: popup_info
-        - query: "span.yt-thumb-simple"
+        - name: "movie title link of top & user page"
+          selector: "#video-title.yt-simple-endpoint.style-scope.ytd-grid-video-renderer"
+          actions:
+            - type: popup_info
+      parents: []
+      children: 
+        - name: "movie title link on watch page"
+          selector: "span#video-title.style-scope.ytd-compact-video-renderer"
+          actions:
+            - type: popup_info
+        - name: "movie title link of playlist on watch page"
+          selector: "span#video-title.style-scope.ytd-playlist-panel-video-renderer"
+          actions:
+            - type: popup_info
+        - name: "movie title link of playlist on search result page"
+          selector: "span#video-title.style-scope.ytd-playlist-renderer"
+          actions:
+            - type: popup_info
+        - name: "movie title link of playlist on search result page"
+          selector: "yt-formatted-string#video-title.style-scope.ytd-child-video-renderer"
+          actions:
+            - type: popup_info
+        - name: "movie thumbnail link"
+          selector: "img.style-scope.yt-img-shadow"
           actions:
             - type: exist_icon
-    - query: "#eow-title"
-      uri: true
-      current:
-        - filter: ""
-          actions:
+    - observers:
+        - characterData
+      query: h1
+      attributeName: baseURI
+      currents:
+        - name: "movie title on watch page"
+          selector: ".title.style-scope.ytd-video-primary-info-renderer"
+          actions: 
             - type: popup_info
       parents: []
       children: []
-  file:
+  file: # for user environment
     directory: ""
     pattern: "^([a-zA-Z0-9\\_-]{11})"
     matchnum: 1

@@ -11,7 +11,7 @@ export default class Sites extends Component {
           <h2>
             Sites
 
-            <div style={{ float: "right" }}>
+            <div className="float_right">
               <button type="button" onClick={newSiteConfig}>New</button>
             </div>
           </h2>

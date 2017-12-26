@@ -16,43 +16,41 @@ class ConfigLoader {
 
     const site = sites[0]
 
-    site.targets = site.targets.map(target => {
+    site.manipulates = site.manipulates.map(manipulate => {
       // unique id
-      target.id = uniqueId()
+      manipulate.id = uniqueId()
 
       // convert value & append id
-      target = Object.assign(target,
-        ["current", "parents", "children"].reduce((obj, name) => {
-          const manipulates = target[name]
+      return Object.assign(manipulate,
+        ["currents", "parents", "children"].reduce((obj, name) => {
+          const targets = manipulate[name]
 
-          if (!Array.isArray(manipulates) || manipulates.length == 0) {
+          if (!Array.isArray(targets) || targets.length == 0) {
             return obj
           }
 
-          // manipulate = current/parents/children array
-          obj[name] = manipulates.map(manipulate => Object.getOwnPropertyNames(manipulate).reduce((conf, key) => {
+          // targets = currents/parents/children array
+          obj[name] = targets.map(target => Object.getOwnPropertyNames(target).reduce((conf, key) => {
             // convert Object to String
-            conf[key] = this.convertValue(manipulate[key])
+            conf[key] = this.convertValue(target[key])
 
             return conf 
-          }, {})).map(manipulate => {
+          }, {})).map(target => {
             // unique id
-            manipulate.id = uniqueId()
+            target.id = uniqueId()
 
-            manipulate.actions = manipulate.actions.map(action => {
+            target.actions = target.actions.map(action => {
               action.id = uniqueId()
 
               return action
             })
 
-            return manipulate
+            return target
           })
 
           return obj
         }, {})
       )
-
-      return target
     })
 
     return site
