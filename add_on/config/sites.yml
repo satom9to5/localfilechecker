@@ -12,43 +12,43 @@
       query: a
       attributeName: href
       currents: 
-        - name: "movie title link of watch & search result page"
+        - description: "movie title link of watch & search result page"
           selector: "#video-title.yt-simple-endpoint.style-scope.ytd-video-renderer"
           actions:
             - type: popup_info
-        - name: "movie title link of top & user page"
+        - description: "movie title link of top & user page"
           selector: "#video-title.yt-simple-endpoint.style-scope.ytd-grid-video-renderer"
           actions:
             - type: popup_info
       parents: []
       children: 
-        - name: "movie title link on watch page"
+        - description: "movie title link on watch page"
           selector: "span#video-title.style-scope.ytd-compact-video-renderer"
           actions:
             - type: popup_info
-        - name: "movie title link of playlist on watch page"
+        - description: "movie title link of playlist on watch page"
           selector: "span#video-title.style-scope.ytd-playlist-panel-video-renderer"
           actions:
             - type: popup_info
-        - name: "movie title link of playlist on search result page"
+        - description: "movie title link of playlist on search result page"
           selector: "span#video-title.style-scope.ytd-playlist-renderer"
           actions:
             - type: popup_info
-        - name: "movie title link of playlist on search result page"
+        - description: "movie title link of playlist on search result page"
           selector: "yt-formatted-string#video-title.style-scope.ytd-child-video-renderer"
           actions:
             - type: popup_info
-        - name: "movie thumbnail link"
+        - description: "movie thumbnail link"
           selector: "img.style-scope.yt-img-shadow"
           actions:
             - type: exist_icon
     - observers:
-        - characterData
-      query: h1
+        - childList
+      query: "h1.title.style-scope.ytd-video-primary-info-renderer"
       attributeName: baseURI
       currents:
-        - name: "movie title on watch page"
-          selector: ".title.style-scope.ytd-video-primary-info-renderer"
+        - description: "movie title on watch page"
+          selector: ""
           actions: 
             - type: popup_info
       parents: []

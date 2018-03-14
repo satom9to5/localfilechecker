@@ -4,12 +4,14 @@ export default class ManipulateElement {
   static create(key, manipulate, element) {
     const manipulateElement = new ManipulateElement(key, manipulate, element)
 
-    Object.defineProperties(element, {
-      _manipulateElement: {
-        value: manipulateElement,
-        writable: true,
-      }
-    })
+    if (manipulateElement.isEnable()) {
+      Object.defineProperties(element, {
+        _manipulateElement: {
+          value: manipulateElement,
+          writable: true,
+        }
+      })
+    }
 
     return manipulateElement
   }
@@ -38,6 +40,12 @@ export default class ManipulateElement {
 
   visible() {
     return !!(this.element.offsetWidth || this.element.offsetHeight || this.element.getClientRects().length)
+  }
+
+  isEnable() {
+    const { currents, parents, children } = this.manipulateTargets
+
+    return (currents.length > 0 || parents.length > 0 || children.length > 0)
   }
 
   set(pathsInfo) {

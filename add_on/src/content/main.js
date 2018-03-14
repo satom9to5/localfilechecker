@@ -9,6 +9,7 @@ import sitesYml from 'config/sites.yml'
 
 const manipulateElements = new ManipulateElements()
 
+// target url is matching match.pattern
 const urlMatch = (element, setting, manipulate) => {
   if (!(setting.match) || !(setting.match.regexp) || !(setting.match.matchnum)) {
     return null
@@ -33,7 +34,7 @@ const getQueryKeys = (setting, records) => {
   records.forEach(record => {
     const target = (record.type == "characterData" ? record.target.parentNode : record.target) || {}
     // record.target is text when type is characterData
-    const { localName, _manipulateElement } = target
+    const { _manipulateElement } = target
 
     setting.manipulates.filter(manipulate => manipulate.observers.filter(observer => observer == record.type).length > 0).forEach(manipulate => {
       if (!(manipulate.hasOwnProperty('query')) || !(manipulate.hasOwnProperty('attributeName'))) {
@@ -42,79 +43,25 @@ const getQueryKeys = (setting, records) => {
 
       const { query, attributeName } = manipulate
 
-      let matchKey = null
-
       switch (record.type) {
       case "childList":
-        Array.from(target.querySelectorAll(query)).forEach(element => {
-          if (!(attributeName in element) || element[attributeName] == '') {
-            return
-          }
-
-          matchKey = urlMatch(element, setting, manipulate)
-          
-          if (!matchKey) {
-            return
-          }
-
-          manipulateElements.add(matchKey, manipulate, element)
-
-          if (!(queryKeys.hasOwnProperty(matchKey))) {
-            queryKeys[matchKey] = []
-          }
-
-          queryKeys[matchKey].push(element)
-        })
+        // when url matching querySelectolAll() elements
+        Array.from(target.querySelectorAll(query))
+          .filter(element => attributeName in element && element[attributeName] && element[attributeName] != '')
+          .forEach(element => addQueryKeys(queryKeys, element, manipulate, setting))
 
         break
       case "attributes":
-        if (query != localName || attributeName != record.attributeName) {
-          return
+        if (target.matches(query) && attributeName == record.attributeName) {
+          addQueryKeys(queryKeys, target, manipulate, setting) 
         }
 
-        if (_manipulateElement) {
-          _manipulateElement.unset()
-        }
-
-        // other movie link on ytd-watch OR current node update
-        matchKey = urlMatch(target, setting, manipulate)
-        
-        if (!matchKey) {
-          return
-        }
-
-        manipulateElements.add(matchKey, manipulate, target)
-
-        if (!(queryKeys.hasOwnProperty(matchKey))) {
-          queryKeys[matchKey] = []
-        }
-
-        queryKeys[matchKey].push(target)
         break
       case "characterData":
-        if (query != localName) {
-          return
+        if (target.matches(query)) {
+          addQueryKeys(queryKeys, target, manipulate, setting) 
         }
 
-        if (_manipulateElement) {
-          _manipulateElement.unset()
-        }
-
-        // other movie link on ytd-watch OR current node update
-        matchKey = urlMatch(target, setting, manipulate)
-        
-        if (!matchKey) {
-          return
-        }
-
-        // target is textNode
-        manipulateElements.add(matchKey, manipulate, target)
-
-        if (!(queryKeys.hasOwnProperty(matchKey))) {
-          queryKeys[matchKey] = []
-        }
-
-        queryKeys[matchKey].push(target)
         break
       }
     })
@@ -123,30 +70,51 @@ const getQueryKeys = (setting, records) => {
   return queryKeys
 }
 
+const addQueryKeys = (queryKeys, target, manipulate, setting) => {
+  const matchKey = urlMatch(target, setting, manipulate)
+
+  if (!matchKey) {
+    return
+  }
+
+  // target is textNode
+  if (!manipulateElements.add(matchKey, manipulate, target)) {
+    return
+  }
+
+  if (!(queryKeys.hasOwnProperty(matchKey))) {
+    queryKeys[matchKey] = []
+  }
+
+  queryKeys[matchKey].push(target)
+}
+
 const setObserver = (setting) => {
   const settingObserver = new MutationObserver((records, observer) => {
     const queryKeys = getQueryKeys(setting, records)
+    const queryKeyNames = Object.getOwnPropertyNames(queryKeys)
 
     //console.log(manipulateElements.manipulateElements.filter(manipulateElement => manipulateElement.visible()))
 
-    if (Object.getOwnPropertyNames(queryKeys).length == 0) {
+    if (queryKeyNames.length == 0) {
       return
     }
 
     // send notify API
-    find(setting.name, Object.getOwnPropertyNames(queryKeys), pathsInfoMap => {
-      //console.log(fileInfos)
-      Object.getOwnPropertyNames(pathsInfoMap)
-        .filter(key => queryKeys.hasOwnProperty(key))
-        .forEach(key => {
-          const elements = queryKeys[key]
+    find(setting.name, queryKeyNames, pathsInfoMap => {
+      queryKeyNames.forEach(key => {
+        const isSet = pathsInfoMap.hasOwnProperty(key)
 
-          elements.filter(element => element.hasOwnProperty('_manipulateElement') && element._manipulateElement.key == key)
-            .forEach(element => {
+        queryKeys[key].filter(element => element.hasOwnProperty('_manipulateElement'))
+          .forEach(element => {
+            if (isSet && element._manipulateElement.key == key) {
               // manipulate currents/parents/children
               element._manipulateElement.set(pathsInfoMap[key])
-            })
-        })
+            } else {
+              element._manipulateElement.unset()
+            }
+          })
+      })
     })
   })
 

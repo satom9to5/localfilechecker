@@ -15,13 +15,19 @@ export default class ManipulateElements {
 
     if (_manipulateElement) {
       _manipulateElement.key = key
+      return true
     } else {
       if (!(this.elements.hasOwnProperty(query))) {
         this.elements[query] = []
       }
 
       ManipulateElement.create(key, manipulate, element)
-      this.elements[query].push(element)
+      if (element.hasOwnProperty('_manipulateElement')) {
+        this.elements[query].push(element)
+        return true
+      } else {
+        return false
+      }
     }
   }
 

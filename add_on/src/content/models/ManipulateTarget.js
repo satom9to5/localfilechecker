@@ -48,14 +48,25 @@ export default class ManipulateTarget {
 
     switch (this.type) {
     case 'current':
-      if (element.parentNode && element.parentNode.querySelector(this.target.selector) == element) {
+      if (element.parentNode && 
+          (
+            (this.target.selector && element.parentNode.querySelector(this.target.selector) == element) || !this.target.selector
+          )
+        ) {
         return [element]
       } else {
         return []
       }
       break
     case 'parent':
-      // not using currently
+      let elem = element.parentNode
+      while (elem) {
+        if ('matches' in elem && elem.matches(this.target.selector)) {
+          return [elem]
+        }
+
+        elem = elem.parentNode
+      }
       return []
       break
     case 'children':
