@@ -28,7 +28,7 @@ const urlMatch = (element, setting, manipulate) => {
   return matches[setting.match.matchnum]
 }
 
-const getQueryKeys = (setting, records) => {
+const setManipulateElementsAndGetQueryKeys = (setting, records) => {
   const queryKeys = {} // found keys for query
 
   records.forEach(record => {
@@ -48,18 +48,18 @@ const getQueryKeys = (setting, records) => {
         // when url matching querySelectolAll() elements
         Array.from(target.querySelectorAll(query))
           .filter(element => attributeName in element && element[attributeName] && element[attributeName] != '')
-          .forEach(element => addQueryKeys(queryKeys, element, manipulate, setting))
+          .forEach(element => setManipulateElements(queryKeys, element, manipulate, setting))
 
         break
       case "attributes":
         if (target.matches(query) && attributeName == record.attributeName) {
-          addQueryKeys(queryKeys, target, manipulate, setting) 
+          setManipulateElements(queryKeys, target, manipulate, setting) 
         }
 
         break
       case "characterData":
         if (target.matches(query)) {
-          addQueryKeys(queryKeys, target, manipulate, setting) 
+          setManipulateElements(queryKeys, target, manipulate, setting) 
         }
 
         break
@@ -70,7 +70,7 @@ const getQueryKeys = (setting, records) => {
   return queryKeys
 }
 
-const addQueryKeys = (queryKeys, target, manipulate, setting) => {
+const setManipulateElements = (queryKeys, target, manipulate, setting) => {
   const matchKey = urlMatch(target, setting, manipulate)
 
   if (!matchKey) {
@@ -91,7 +91,7 @@ const addQueryKeys = (queryKeys, target, manipulate, setting) => {
 
 const setObserver = (setting) => {
   const settingObserver = new MutationObserver((records, observer) => {
-    const queryKeys = getQueryKeys(setting, records)
+    const queryKeys = setManipulateElementsAndGetQueryKeys(setting, records)
     const queryKeyNames = Object.getOwnPropertyNames(queryKeys)
 
     //console.log(manipulateElements.manipulateElements.filter(manipulateElement => manipulateElement.visible()))
