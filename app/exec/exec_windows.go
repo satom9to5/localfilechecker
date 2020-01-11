@@ -17,7 +17,7 @@ func (c Cmd) Start() error {
 func (c *Cmd) setFlag() {
 	if platform == "Firefox" {
 		c.command.SysProcAttr = &syscall.SysProcAttr{
-			CreationFlags: CREATE_BREAKAWAY_FROM_JOB,
+			CreationFlags: CREATE_BREAKAWAY_FROM_JOB | syscall.CREATE_NEW_PROCESS_GROUP,
 		}
 	}
 }

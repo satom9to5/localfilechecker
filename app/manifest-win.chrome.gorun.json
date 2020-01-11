@@ -4,6 +4,6 @@
   "path": "gorun.bat",
   "type": "stdio",
   "allowed_origins": [
-    "chrome-extension://ndkeiioggibdofbgcigiglknbbeicbmm/"
+    "chrome-extension://eaoaokemmimkgmcfjnppfhohpmapldka/"
   ]
 }

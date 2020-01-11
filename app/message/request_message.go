@@ -1,10 +1,6 @@
 package message
 
 import (
-	pf "../../pidfile"
-	"../../watch_server/config"
-	"../exec"
-	"../logs"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -16,6 +12,13 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
+  // from local 
+	pf "pidfile"
+	"watch_server/config"
+	// in project
+	"app/exec"
+	"app/logs"
 )
 
 const (
@@ -50,7 +53,7 @@ func NewRequestMessage() *RequestMessage {
 }
 
 func (rm RequestMessage) String() string {
-	return fmt.Sprintf("Type:%s, Port:%d, Configs:%s", rm.Type, rm.Port, rm.Configs)
+	return fmt.Sprintf("Type:%s, Port:%d, Log:%s, Pidfile:%s, Platform:%s, Configs:%s", rm.Type, rm.Port, rm.Log, rm.Pidfile, rm.Platform, rm.Configs)
 }
 
 func (rm *RequestMessage) Run() error {
@@ -82,9 +85,15 @@ func (rm *RequestMessage) serverStart() error {
 		return errors.New("cannot use well-known port.")
 	}
 
-	// server runnning check
-	if proc, err := GetProcess(); err == nil {
-		return fmt.Errorf("Server is Running. pid:%d", proc.Pid)
+	// exist pidfile check
+	if _, err := pf.Read(); err == nil {
+		// server runnning check
+		if proc, err := pf.GetProcess(); err == nil {
+			return fmt.Errorf("Server is Running. pid:%d", proc.Pid)
+		}
+
+		// when irregular process exited
+		pf.Remove()
 	}
 
 	// Command Line Parameter
@@ -148,6 +157,7 @@ func (rm *RequestMessage) serverStart() error {
 	// Server Start
 	exec.SetPlatform(rm.Platform)
 	cmd := exec.Command(command, params...)
+	// process is child group of browser when Firefox
 	if *errorCheck {
 		stderr, _ = cmd.Command().StderrPipe()
 	}
@@ -166,11 +176,21 @@ func (rm *RequestMessage) serverStart() error {
 		}
 	}
 
-	return nil
+	// wait start child process
+	logs.GetLogger().Println("Waiting Server Start...")
+	for i := 0; i < 10; i++ {
+		if _, err := pf.GetProcess(); err == nil {
+			return nil // Normal return
+		}
+		// wait start child process
+		time.Sleep(time.Second)
+	}
+
+	return errors.New("Falied server start.")
 }
 
 func (rm *RequestMessage) serverStop() error {
-	proc, err := GetProcess()
+	proc, err := pf.GetProcess()
 	if err != nil {
 		return err
 	}
@@ -187,18 +207,9 @@ func (rm *RequestMessage) serverStop() error {
 
 func (rm *RequestMessage) running() error {
 	// server runnning check
-	_, err := GetProcess()
+	_, err := pf.GetProcess()
 
 	return err
-}
-
-func GetProcess() (*os.Process, error) {
-	pid, err := pf.Read()
-	if err != nil {
-		return nil, err
-	}
-
-	return os.FindProcess(pid)
 }
 
 func SetLogdir(dir string) {

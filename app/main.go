@@ -1,13 +1,14 @@
 package main
 
 import (
-	"./logs"
-	"./message"
-	nm "./native_message"
 	"flag"
 	"os"
 	"path/filepath"
 	"regexp"
+	// in project
+	"app/logs"
+	"app/message"
+	nm "app/native_message"
 )
 
 func main() {
@@ -41,6 +42,8 @@ func main() {
 			break
 		}
 
+		logger.Println("RequestMessage: " + req.String())
+
 		res.Type = req.Type
 
 		err = req.Run()
@@ -52,6 +55,12 @@ func main() {
 
 		res.Success = true
 		break
+	}
+
+	if res.Success {
+		logger.Println("Success!")
+	} else {
+		logger.Println(res.Message)
 	}
 
 	if err = nm.Send(res, os.Stdout); err != nil {
