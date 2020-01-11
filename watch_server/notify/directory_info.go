@@ -1,15 +1,17 @@
 package notify
 
 import (
-	"../config"
 	"errors"
 	"fmt"
-	"github.com/satom9to5/dirnotify"
-	"github.com/satom9to5/fileinfo"
 	"log"
 	"regexp"
 	"sync"
 	"time"
+	// outer
+	"github.com/satom9to5/dirnotify"
+	"github.com/satom9to5/fileinfo"
+	// in project
+	"watch_server/config"
 )
 
 type directoryInfo struct {
@@ -87,7 +89,9 @@ func (di *directoryInfo) walk() {
 		}
 
 		// append
-		di.addPath(fi)
+		if _, _, err := di.addPath(fi); err != nil {
+			log.Println(err)
+		}
 
 		return nil
 	})
@@ -162,7 +166,7 @@ func (di *directoryInfo) getPathKey(path string) (string, error) {
 	if matches != nil {
 		return matches[di.Config.MatchNum], nil
 	} else {
-		return "", errors.New("key not found.")
+		return "", errors.New(fmt.Sprintf("key not found. path: %s", path))
 	}
 }
 

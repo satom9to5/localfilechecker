@@ -1,9 +1,10 @@
 package handle
 
 import (
-	"../libs/json"
-	"../notify"
 	"net/http"
+	// in project
+	"watch_server/libs/json"
+	"watch_server/notify"
 )
 
 func Summaries(w http.ResponseWriter, r *http.Request) {

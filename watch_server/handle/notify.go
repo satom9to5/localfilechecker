@@ -1,11 +1,13 @@
 package handle
 
 import (
-	"../libs/json"
-	"../notify"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	// outer
+	"github.com/gorilla/websocket"
+	// in project
+	"watch_server/libs/json"
+	"watch_server/notify"
 )
 
 var (

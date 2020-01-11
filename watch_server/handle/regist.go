@@ -1,12 +1,14 @@
 package handle
 
 import (
-	"../config"
-	"../libs/json"
-	"../notify"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	// outer
+	"github.com/gorilla/mux"
+	// in project
+	"watch_server/config"
+	"watch_server/libs/json"
+	"watch_server/notify"
 )
 
 func Regist(w http.ResponseWriter, r *http.Request) {

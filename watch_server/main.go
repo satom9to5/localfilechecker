@@ -1,18 +1,20 @@
 package main
 
 import (
-	"../pidfile"
-	"./config"
-	"./flag"
-	"./handle"
-	"./libs/json"
-	"./notify"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
+	// outer
+	"github.com/gorilla/mux"
+	// in project
+	"pidfile"
+	"watch_server/config"
+	"watch_server/flag"
+	"watch_server/handle"
+	"watch_server/libs/json"
+	"watch_server/notify"
 )
 
 func main() {
@@ -52,17 +54,6 @@ func main() {
 	shutdown()
 }
 
-func pidfileCheck() {
-	pid, _ := pidfile.Read()
-	if pid > 0 {
-		shutdown("Server is already Running.")
-	}
-
-	if err := pidfile.Write(); err != nil {
-		shutdown(err)
-	}
-}
-
 // log setting
 func setLog() {
 	log.SetFlags(log.Ldate | log.Ltime)
@@ -79,6 +70,17 @@ func setLog() {
 	}
 
 	log.SetOutput(logFile)
+}
+
+func pidfileCheck() {
+	pid, _ := pidfile.Read()
+	if pid > 0 {
+		shutdown("Server is already Running.")
+	}
+
+	if err := pidfile.Write(); err != nil {
+		shutdown(err)
+	}
 }
 
 func setConfig() {

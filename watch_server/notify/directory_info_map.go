@@ -1,9 +1,10 @@
 package notify
 
 import (
-	"../config"
 	"errors"
 	"fmt"
+	// in project
+	"watch_server/config"
 )
 
 type directoryInfoMap map[string]*directoryInfo
