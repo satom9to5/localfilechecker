@@ -123,7 +123,7 @@ chrome.contextMenus.create({
   id: watchServerConf.id,
   type: 'normal',
   title: watchServerConf.title.stop,
-  contexts: ['all'],
+  contexts: ['browser_action'],
   onclick: watchServerMenuClickListener
 })
 

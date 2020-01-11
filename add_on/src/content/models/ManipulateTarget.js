@@ -15,6 +15,7 @@ export default class ManipulateTarget {
     // unset old action
     this.targetActions.forEach(targetActions => targetActions.unset())
 
+    // check when all MutationObserver events checked
     const selectorElements = this.selectElements()
 
     if (selectorElements.length == 0) {

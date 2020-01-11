@@ -26,7 +26,7 @@
   "browser_action": {
     "default_title": "Local File Check"
   },
-  "options_page": "options.html", // Chrome
+  //"options_page": "options.html", // Chrome
   "options_ui": { // Firefox
     "page": "options.html",
     "open_in_tab": true
