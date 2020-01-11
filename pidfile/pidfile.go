@@ -24,6 +24,15 @@ func SetPath(path string) {
 	*pidfile = path
 }
 
+func GetProcess() (*os.Process, error) {
+	pid, err := Read()
+	if err != nil {
+		return nil, err
+	}
+
+	return os.FindProcess(pid)
+}
+
 func Read() (int, error) {
 	if *pidfile == "" {
 		return 0, notPidfileError
